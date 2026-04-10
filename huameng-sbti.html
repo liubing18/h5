@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>你是哪种造梦人体质</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans SC', -apple-system, sans-serif;
+    background: #08080f;
+    color: #fff;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .screen {
+    display: none;
+    min-height: 100vh;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    animation: fadeIn 0.45s cubic-bezier(0.4,0,0.2,1);
+    position: relative;
+    overflow: hidden;
+  }
+  .screen.active { display: flex; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(22px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(28px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(-2deg); }
+    50% { transform: translateY(-16px) rotate(2deg); }
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+  @keyframes rainbow { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+
+  /* ====== 开场背景 ====== */
+  .bg-start {
+    position: fixed; inset: 0; z-index: 0;
+    background: #0a0612;
+    background-image:
+      radial-gradient(ellipse at 15% 50%, rgba(255,106,77,0.18) 0%, transparent 50%),
+      radial-gradient(ellipse at 85% 50%, rgba(147,51,234,0.18) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 0%, rgba(251,191,36,0.08) 0%, transparent 50%);
+  }
+  .bg-start::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.015'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  /* ====== 封面 ====== */
+  #screen-start { z-index: 1; gap: 0; padding: 0; justify-content: center; }
+
+  .cover-top-badge {
+    background: linear-gradient(90deg, #FF6A4D, #FF3DAA, #9333EA);
+    padding: 8px 28px;
+    border-radius: 50px;
+    font-size: 12px; font-weight: 900;
+    letter-spacing: 3px; text-transform: uppercase;
+    color: white; margin-bottom: 24px;
+    box-shadow: 0 4px 24px rgba(255,107,77,0.4);
+    animation: pulse 2s infinite;
+  }
+
+  .cover-icon {
+    font-size: 80px; margin-bottom: 12px;
+    animation: float 3.5s ease-in-out infinite;
+    filter: drop-shadow(0 8px 24px rgba(147,51,234,0.4));
+  }
+
+  .cover-main-title {
+    font-size: clamp(30px, 9vw, 46px);
+    font-weight: 900;
+    text-align: center;
+    line-height: 1.25;
+    background: linear-gradient(135deg, #FF6A4D 0%, #FF3DAA 40%, #9333EA 80%, #FF6A4D 100%);
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: rainbow 4s linear infinite;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+
+  .cover-sub-title {
+    font-size: 14px; color: rgba(255,255,255,0.4);
+    text-align: center; margin-bottom: 28px; letter-spacing: 2px;
+  }
+
+  .cover-divider {
+    width: 60px; height: 3px;
+    background: linear-gradient(90deg, #FF6A4D, #9333EA);
+    border-radius: 2px; margin-bottom: 28px;
+  }
+
+  .cover-chips {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    justify-content: center; max-width: 340px; margin-bottom: 40px;
+    padding: 0 20px;
+  }
+  .chip {
+    padding: 7px 18px; border-radius: 50px;
+    font-size: 13px; font-weight: 700;
+    border: 2px solid; letter-spacing: 0.5px;
+    backdrop-filter: blur(8px);
+  }
+
+  .cover-start-btn {
+    background: linear-gradient(90deg, #FF6A4D, #FF3DAA);
+    border: none; color: white;
+    padding: 17px 60px;
+    border-radius: 60px;
+    font-size: 18px; font-weight: 900;
+    cursor: pointer; transition: all 0.3s;
+    letter-spacing: 3px; text-transform: uppercase;
+    box-shadow: 0 8px 32px rgba(255,107,77,0.4);
+    margin-bottom: 16px;
+  }
+  .cover-start-btn:hover { transform: scale(1.07); box-shadow: 0 14px 40px rgba(255,107,77,0.6); }
+  .cover-start-btn:active { transform: scale(0.97); }
+
+  .cover-note { font-size: 12px; color: rgba(255,255,255,0.2); letter-spacing: 1px; }
+
+  /* ====== 问题页 ====== */
+  #screen-question { justify-content: flex-start; padding-top: 0; padding-bottom: 40px; }
+
+  .q-header {
+    width: 100%; padding: 20px 20px 0;
+  }
+  .q-progress-wrap { display: flex; align-items: center; gap: 10px; }
+  .q-progress-bg { flex: 1; height: 5px; background: rgba(255,255,255,0.07); border-radius: 5px; overflow: hidden; }
+  .q-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #FF6A4D, #FF3DAA, #9333EA);
+    background-size: 200% 100%;
+    animation: rainbow 3s linear infinite;
+    border-radius: 5px;
+    transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+  }
+  .q-progress-label { font-size: 11px; color: rgba(255,255,255,0.3); font-weight: 700; letter-spacing: 1px; white-space: nowrap; }
+
+  .q-card {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 28px 24px; gap: 8px;
+    width: 100%;
+  }
+  .q-number {
+    font-size: 11px; color: #FF6A4D; font-weight: 900;
+    letter-spacing: 5px; text-transform: uppercase; margin-bottom: 6px;
+  }
+  .q-text {
+    font-size: clamp(18px, 5.5vw, 22px);
+    font-weight: 900; text-align: center;
+    line-height: 1.65; margin-bottom: 4px;
+    color: #fff;
+  }
+  .q-hint {
+    font-size: 12px; color: rgba(255,255,255,0.28);
+    text-align: center; margin-bottom: 12px;
+    font-style: italic;
+  }
+
+  .q-options { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 10px; }
+  .q-opt {
+    background: rgba(255,255,255,0.04);
+    border: 1.5px solid rgba(255,255,255,0.08);
+    border-radius: 16px; padding: 15px 18px;
+    cursor: pointer; transition: all 0.22s;
+    display: flex; align-items: center; gap: 14px;
+    animation: slideUp 0.3s ease;
+    position: relative; overflow: hidden;
+  }
+  .q-opt::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, #FF6A4D, #FF3DAA);
+    opacity: 0; transition: opacity 0.2s;
+    border-radius: 0 2px 2px 0;
+  }
+  .q-opt:hover {
+    background: rgba(255,107,77,0.1);
+    border-color: rgba(255,107,77,0.5);
+    transform: translateX(5px);
+  }
+  .q-opt:hover::before { opacity: 1; }
+  .q-opt:active { transform: scale(0.97); }
+
+  .opt-num {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: rgba(147,51,234,0.15);
+    border: 1.5px solid rgba(147,51,234,0.4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 900;
+    color: #a855f7; flex-shrink: 0; transition: all 0.2s;
+  }
+  .q-opt:hover .opt-num { background: #FF6A4D; border-color: #FF6A4D; color: white; }
+  .opt-txt { font-size: 14px; color: rgba(255,255,255,0.88); line-height: 1.6; flex: 1; }
+
+  /* ====== 加载页 ====== */
+  #screen-loading { gap: 28px; text-align: center; }
+  .load-ring {
+    width: 70px; height: 70px; border-radius: 50%;
+    border: 3px solid rgba(255,107,77,0.12);
+    border-top-color: #FF6A4D;
+    animation: spin 0.9s linear infinite;
+    display: flex; align-items: center; justify-content: center; font-size: 28px;
+  }
+  .load-msg { font-size: 15px; color: rgba(255,255,255,0.35); animation: pulse 1.4s infinite; }
+
+  /* ====== 结果页 ====== */
+  #screen-result {
+    padding: 24px 20px 60px;
+    justify-content: flex-start; overflow-y: auto;
+  }
+
+  .res-emoji {
+    font-size: 80px; margin: 8px 0 0;
+    filter: drop-shadow(0 8px 24px rgba(255,107,77,0.3));
+    animation: float 3s ease-in-out infinite;
+  }
+  .res-type-tag {
+    font-size: 11px; color: rgba(255,255,255,0.3);
+    letter-spacing: 4px; text-transform: uppercase; margin-bottom: 8px;
+  }
+  .res-type-name {
+    font-size: clamp(24px, 7vw, 34px); font-weight: 900;
+    background: linear-gradient(90deg, #FF6A4D, #FF3DAA, #9333EA);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    text-align: center; line-height: 1.3; margin-bottom: 4px;
+  }
+  .res-type-en {
+    font-size: 10px; color: #FF6A4D; font-weight: 700;
+    letter-spacing: 3px; text-transform: uppercase; margin-bottom: 24px;
+  }
+
+  .res-card {
+    width: 100%; max-width: 440px;
+    background: rgba(255,255,255,0.04);
+    border: 1.5px solid rgba(255,255,255,0.08);
+    border-radius: 24px; padding: 22px 20px;
+    display: flex; flex-direction: column; gap: 20px;
+    backdrop-filter: blur(12px);
+  }
+
+  .res-block {}
+  .res-block-title {
+    font-size: 11px; color: #FF6A4D; font-weight: 900;
+    letter-spacing: 3px; text-transform: uppercase;
+    margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+  }
+  .res-block-title::after { content: ''; flex: 1; height: 1px; background: rgba(255,107,77,0.2); }
+
+  .res-main-desc {
+    font-size: 15px; color: rgba(255,255,255,0.9);
+    line-height: 2; font-weight: 400;
+  }
+
+  .res-analysis {
+    font-size: 13px; color: rgba(255,255,255,0.5);
+    line-height: 2; font-weight: 300;
+    border-left: 3px solid rgba(255,107,77,0.4);
+    padding-left: 14px;
+  }
+
+  .res-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+  .r-tag {
+    padding: 5px 14px; border-radius: 50px;
+    font-size: 12px; font-weight: 700;
+    border: 1.5px solid; letter-spacing: 0.3px;
+  }
+
+  .res-funfact {
+    background: rgba(251,191,36,0.07);
+    border-left: 3px solid rgba(251,191,36,0.5);
+    border-radius: 0 14px 14px 0;
+    padding: 14px 16px;
+    font-size: 13px; color: rgba(251,191,36,0.75);
+    line-height: 1.9;
+  }
+
+  .res-meme {
+    background: rgba(147,51,234,0.08);
+    border: 1.5px dashed rgba(147,51,234,0.35);
+    border-radius: 16px; padding: 16px;
+    font-size: 13px; color: rgba(255,255,255,0.7);
+    line-height: 2; text-align: center;
+    white-space: pre-line;
+  }
+
+  .res-share-btn {
+    width: 100%; max-width: 440px;
+    background: linear-gradient(90deg, #FF6A4D, #FF3DAA);
+    border: none; color: white; padding: 16px;
+    border-radius: 60px; font-size: 16px; font-weight: 900;
+    cursor: pointer; transition: all 0.3s;
+    letter-spacing: 3px; text-transform: uppercase;
+    box-shadow: 0 8px 28px rgba(255,107,77,0.4);
+  }
+  .res-share-btn:hover { transform: scale(1.04); box-shadow: 0 12px 36px rgba(255,107,77,0.6); }
+
+  .res-retry-btn {
+    background: transparent; border: 1.5px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.4);
+    padding: 11px 30px; border-radius: 50px;
+    font-size: 13px; cursor: pointer; transition: all 0.3s;
+  }
+  .res-retry-btn:hover { border-color: #FF6A4D; color: rgba(255,255,255,0.8); }
+
+  .res-footer { font-size: 10px; color: rgba(255,255,255,0.13); text-align: center; letter-spacing: 1px; }
+
+  /* color classes */
+  .c-orange { color: #FF6A4D; border-color: rgba(255,106,77,0.4); background: rgba(255,106,77,0.1); }
+  .c-pink { color: #FF3DAA; border-color: rgba(255,61,170,0.4); background: rgba(255,61,170,0.1); }
+  .c-purple { color: #a855f7; border-color: rgba(147,51,234,0.4); background: rgba(147,51,234,0.1); }
+  .c-yellow { color: #fbbf24; border-color: rgba(251,191,36,0.4); background: rgba(251,191,36,0.08); }
+  .c-cyan { color: #22d3ee; border-color: rgba(34,211,238,0.4); background: rgba(34,211,238,0.08); }
+  .c-green { color: #4ade80; border-color: rgba(74,222,128,0.4); background: rgba(74,222,128,0.08); }
+</style>
+</head>
+<body>
+
+<!-- 封面 -->
+<div id="screen-start" class="screen active">
+  <div class="bg-start"></div>
+  <div style="display:flex;flex-direction:column;align-items:center;z-index:1;padding:32px 20px;text-align:center;">
+    <div class="cover-top-badge">🧠 MBTI已经OUT了</div>
+    <div class="cover-icon">🌙</div>
+    <div class="cover-main-title">你是哪种<br>造梦人体质？</div>
+    <div class="cover-sub-title">梦境人格测试</div>
+    <div class="cover-divider"></div>
+    <div class="cover-chips">
+      <span class="chip c-orange">🦸 超雄战神</span>
+      <span class="chip c-pink">🎭 人格分裂</span>
+      <span class="chip c-purple">😱 社死专业户</span>
+      <span class="chip c-yellow">💀 卡在高潮前</span>
+      <span class="chip c-cyan">🛌 躺平摆烂</span>
+      <span class="chip c-green">✨ 绝绝子</span>
+    </div>
+    <button class="cover-start-btn" onclick="startTest()">开始造梦 →</button>
+    <div class="cover-note">20道题 · 2分钟 · 纯属娱乐</div>
+  </div>
+</div>
+
+<!-- 问题页 -->
+<div id="screen-question" class="screen">
+  <div class="q-header">
+    <div class="q-progress-wrap">
+      <div class="q-progress-bg"><div class="q-progress-fill" id="progFill"></div></div>
+      <div class="q-progress-label"><span id="progNum">1</span>/20</div>
+    </div>
+  </div>
+  <div class="q-card">
+    <div class="q-number">造梦第<span id="qNumDisp">一</span>题</div>
+    <div class="q-text" id="qText"></div>
+    <div class="q-hint" id="qHint"></div>
+    <div class="q-options" id="qOpts"></div>
+  </div>
+</div>
+
+<!-- 加载页 -->
+<div id="screen-loading" class="screen">
+  <div class="load-ring">💭</div>
+  <div class="load-msg" id="loadMsg">正在分析你的梦境频率...</div>
+</div>
+
+<!-- 结果页 -->
+<div id="screen-result" class="screen">
+  <div class="res-emoji" id="rEmoji"></div>
+  <div class="res-type-tag">你的造梦人格是</div>
+  <div class="res-type-name" id="rName"></div>
+  <div class="res-type-en" id="rEn"></div>
+
+  <div class="res-card">
+    <div class="res-block">
+      <div class="res-block-title">🚩 你是什么情况</div>
+      <div class="res-main-desc" id="rProfile"></div>
+    </div>
+    <div class="res-block">
+      <div class="res-block-title">🔍 深度解析</div>
+      <div class="res-analysis" id="rAnalysis"></div>
+    </div>
+    <div class="res-block">
+      <div class="res-block-title">🏷️ 人格标签</div>
+      <div class="res-tags" id="rTags"></div>
+    </div>
+    <div class="res-block">
+      <div class="res-block-title">😂 搞笑真相</div>
+      <div class="res-funfact" id="rFact"></div>
+    </div>
+    <div class="res-block">
+      <div class="res-meme" id="rMeme"></div>
+    </div>
+  </div>
+
+  <button class="res-share-btn" onclick="shareRes()">🚀 分享给朋友</button>
+  <button class="res-retry-btn" onclick="restartTest()">重新测试 ↺</button>
+  <div class="res-footer">画梦实验室出品 · 纯属娱乐</div>
+</div>
+
+<script>
+// ===== 20道题目 =====
+const Q = [
+  {
+    t: "你梦醒之后的第一反应通常是？",
+    h: "真实的第一反应，不许装",
+    o: [
+      { s:{a:2,c:1,f:1,h:1,i:1}, txt: "赶紧回想，生怕忘了，梦里那个是谁来着" },
+      { s:{b:2,e:1,g:1}, txt: "翻身继续睡，梦什么的不重要" }
+    ]
+  },
+  {
+    t: "你的梦一般是什么画质的？",
+    h: "这个问题很重要",
+    o: [
+      { s:{a:1,c:2,d:1}, txt: "4K超清，连指甲盖都看得见" },
+      { s:{b:1,e:1,f:1,h:1,i:1}, txt: "AV画质，模糊得跟打了马赛克一样" }
+    ]
+  },
+  {
+    t: "你经常做的梦是哪一种？",
+    h: "你最逃不掉的那个",
+    o: [
+      { s:{a:2,f:1}, txt: "被人追 / 考试 / 迟到 / 裸奔 —— 经典噩梦全家桶" },
+      { s:{c:2,e:1,g:1}, txt: "飞起来了 / 变形了 / 和偶像一起 —— 白日梦Plus" }
+    ]
+  },
+  {
+    t: "梦里有没有出现过你的小学/中学老师？",
+    h: "特别是那种突然出现在奇怪地方的",
+    o: [
+      { s:{d:2,h:1}, txt: "出现过！TA还在梦里骂我" },
+      { s:{b:1,e:1,i:1}, txt: "从来没有，TA不配出现在我的梦里" }
+    ]
+  },
+  {
+    t: "你有没有在梦里笑出声过？",
+    h: "旁边有人看着你那种",
+    o: [
+      { s:{c:2,g:2}, txt: "有！把自己笑醒了那种" },
+      { s:{a:1,b:1,d:1,f:1,h:1,i:1}, txt: "没有，梦里我的表情管理也在线" }
+    ]
+  },
+  {
+    t: "你有没有在梦里骂过人、打过人？",
+    h: "或者做了现实中不敢做的事",
+    o: [
+      { s:{a:3}, txt: "有！梦里我是超雄战神，谁惹我我就干谁" },
+      { s:{b:1,c:1,d:1,e:1,f:1,g:1,h:1,i:1}, txt: "没有，梦里我也是遵纪守法的好公民" }
+    ]
+  },
+  {
+    t: "你做的梦一般是什么结局？",
+    h: "最常见的那种",
+    o: [
+      { s:{f:3,d:1}, txt: "被吓醒 / 卡住出不来 / 快追到了但梦结束了" },
+      { s:{e:2,g:2,i:1}, txt: "自然醒 / 切换到另一个梦 / 睡着了（清醒梦）" }
+    ]
+  },
+  {
+    t: "你醒来之后会跟别人讲你的梦吗？",
+    h: "别人听完的反应是？",
+    o: [
+      { s:{g:2}, txt: "会！我的梦很精彩，他们必须听" },
+      { s:{b:2,a:1,h:1,i:1}, txt: "不会，讲了别人也不懂，还觉得我脑子有问题" }
+    ]
+  },
+  {
+    t: "你有没有过清醒梦？",
+    h: "就是那种「等等我在做梦！」的时刻",
+    o: [
+      { s:{e:3}, txt: "有！而且我还能控制剧情走向" },
+      { s:{a:1,b:1,c:1,d:1,f:1,g:1,h:1,i:1}, txt: "从来没有，我做梦比上班还认真" }
+    ]
+  },
+  {
+    t: "你梦里的自己，通常是什么状态？",
+    h: "身体感受很重要",
+    o: [
+      { s:{a:2,f:2,d:1}, txt: "跑不动 / 说话没人听得见 / 无力反抗" },
+      { s:{c:2,e:2,g:2}, txt: "生龙活虎 / 想干嘛就干嘛 / 甚至有超能力" }
+    ]
+  },
+  {
+    t: "你大概多久做一次能记住的梦？",
+    h: "能被记住的那种",
+    o: [
+      { s:{g:2,a:1,c:1}, txt: "天天做，梦比我的生活还精彩" },
+      { s:{b:2,i:2,f:1}, txt: "很少，感觉我睡觉就是纯关机模式" }
+    ]
+  },
+  {
+    t: "梦里出现过去世的亲人吗？",
+    h: "这个问题有点私人",
+    o: [
+      { s:{d:2,h:1}, txt: "出现过，而且特别真实，醒来眼眶都湿了" },
+      { s:{a:1,b:1,c:1,e:1,f:1,g:1,i:1}, txt: "没有，或者记不清了" }
+    ]
+  },
+  {
+    t: "你有没有梦见过自己在公众场合出丑？",
+    h: "那种窒息的窒息感",
+    o: [
+      { s:{h:3}, txt: "有！梦里说的话做的事，现在想起来还社死" },
+      { s:{a:1,b:1,c:1,d:1,e:1,f:1,g:1,i:1}, txt: "没有，梦里我的形象管理一直很好" }
+    ]
+  },
+  {
+    t: "你在梦里扮演的是什么角色？",
+    h: "你最常是",
+    o: [
+      { s:{a:2,f:2,d:1}, txt: "受害者 / 逃跑者 / 配角 —— 我在别人的故事里挨打" },
+      { s:{c:2,e:2,g:2}, txt: "主角 / 导演 / 全能视角 —— 我就是梦的主宰" }
+    ]
+  },
+  {
+    t: "醒来的时候身体是什么感觉？",
+    h: "生理层面的",
+    o: [
+      { s:{a:2,f:1}, txt: "心跳快 / 出一身汗 / 肌肉紧绷 —— 跟跑了800米一样" },
+      { s:{b:2,i:2}, txt: "身体很放松，甚至比睡前还累（脑累）" }
+    ]
+  },
+  {
+    t: "你的梦境内容经常重复吗？",
+    h: "同一个场景，同一批演员",
+    o: [
+      { s:{d:3}, txt: "会！有些梦我感觉已经做了十几年了" },
+      { s:{a:1,b:1,c:1,e:1,f:1,g:1,h:1,i:1}, txt: "不太会，每次都是全新的剧情" }
+    ]
+  },
+  {
+    t: "你更希望自己的梦是什么类型的？",
+    h: "你更喜欢/羡慕哪种",
+    o: [
+      { s:{c:1,e:2}, txt: "能飞 / 能穿墙 / 能改变世界 —— 我要当梦中霸主" },
+      { s:{b:2,i:2}, txt: "不做梦 / 一觉到天亮 / 纯关机 —— 我拒绝做梦" }
+    ]
+  },
+  {
+    t: "你梦里的剧情一般有多离谱？",
+    h: "离谱程度打分",
+    o: [
+      { s:{a:1,f:1}, txt: "一般离谱，日常噩梦套餐（考试/迟到/被追）" },
+      { s:{c:2,d:1,e:1,g:1,h:1}, txt: "极度离谱 —— 现实里发生不了的事梦里全有" }
+    ]
+  },
+  {
+    t: "你做梦的时候有声音/BGM吗？",
+    h: "就是那种背景音乐或者有人说话",
+    o: [
+      { s:{g:2,c:1}, txt: "有！梦里有人跟我说话，还有专属BGM" },
+      { s:{a:1,b:1,d:1,e:1,f:1,h:1,i:1}, txt: "基本没声音，只有模糊的环境音" }
+    ]
+  },
+  {
+    t: "最后一道：你做梦的时候，是完全入戏还是偶尔清醒的？",
+    h: "这道决定你的核心人格",
+    o: [
+      { s:{a:2,b:1,c:1,d:1,f:2,h:1}, txt: "完全入戏，梦里发生的一切我都当真" },
+      { s:{e:2,g:2,i:2}, txt: "偶尔清醒，或者全程当观众/旁白" }
+    ]
+  }
+];
+
+// ===== 9种造梦人格（潮流互联网语言版）=====
+const T = {
+  a: {
+    n: "🦸 超雄战神型造梦人",
+    e: "ULTRA-AGGRESSIVE DREAMER",
+    p: "你的梦里没有「怂」这个字。现实中你是唯唯诺诺的打工人🐂马，梦里你是见谁灭谁的超级赛亚人。别人瞪你一眼你能从梦里追杀到现实。超雄战神，说的就是你——班味全无，战神附体。",
+    x: "弗洛伊德管这叫「欲望的伪装满足」，说人话就是：你梦里有多凶，现实里就有多能忍。现实里被甲方折磨不敢吭声，梦里你直接变身把甲方按在地上摩擦。你的大脑比心理咨询师还懂怎么给你出气。",
+    f: "研究表明，超雄造梦人的睡眠心率比普通人高出15%。你的身体可能真的在梦里替你干了一架。醒来感觉累，不是你没睡好，是你在梦里加班了整整八小时。",
+    m: "现实里：'好的好的没问题'😇\n梦里：'今天就是你职业生涯的最后一天'😈\n\n—— 醒来的我：唯唯诺诺🐂马本马",
+    tg: ["压抑释放型", "梦中霸凌者", "现实唯唯诺诺", "精神超雄战神"],
+    tc: ["c-orange","c-pink","c-purple"]
+  },
+  b: {
+    n: "😴 起床困难户型造梦人",
+    e: "SNOOZE-ADDICT DREAMER",
+    p: "你的闹钟是你人生最大的宿敌。每按一次，你就进入一个全新的梦境平行宇宙。你的睡眠是Netflix自动续费，闹钟是VIP取消按钮。你的人生格言：再睡五分钟，这个梦就能做到大结局。",
+    x: "睡眠拖延症的本质是对现实的逃避。现实越苦，梦就越精彩，你越不想醒。你是天然的「摆烂艺术家」，你的脑子比你更懂什么叫「躺平才是正义」。别人早起是自律，你早起是要命。",
+    f: "科学家说每多按一次闹钟，深度睡眠就被打断一次。但你不管，你就是要和白天的自己做斗争。你不是在按闹钟，你是在守护你每一个平行宇宙的精彩剧情。",
+    m: "闹钟响了 → 再睡五分钟\n→ 做了个改变人生的梦\n→ 梦到中彩票了\n→ 突然想起来我今天要上班\n→ 迟到两小时💀\n\n—— 今日份白日梦达成",
+    tg: ["睡眠拖延症晚期", "白日梦VIP会员", "闹钟宿敌", "摆烂艺术家"],
+    tc: ["c-yellow","c-purple","c-cyan"]
+  },
+  c: {
+    n: "🎭 人格分裂预备役造梦人",
+    e: "SPLIT-PERSONALITY DREAMER",
+    p: "你的身份比网络热梗还流动。今天是小学生，明天是宇航员，后天你是追杀你自己的那个人。你是梦中最敬业的演员，演什么像什么，就是不像你自己。一周七天，没有一天的你是一样的。",
+    x: "你是典型的「浓人」—— 情绪饱满，共情能力爆棚，梦里是你释放被现实压抑的另一个自己的舞台。现实里你扮演了太多角色：好员工、好父母、好孩子，梦里的你在追问你：到底哪个才是真的我？",
+    f: "心理学研究显示，经常梦见自己变成动物或物体的人，往往具有超强的同理心。你不只是能共情，你是真的「变成了」对方去感受。你的梦是你的人生拓展包，别人花钱买体验，你睡觉就全有了。",
+    m: "周一梦里：打工仔\n周二梦里：正在逃命的恐龙\n周三梦里：你最讨厌的那个同学\n周四梦里：追杀我本人\n\n—— 一周七天，七个我，七倍精神状态堪忧",
+    tg: ["浓人本浓", "高共情体质", "梦中变形金刚", "身份比班味还流动"],
+    tc: ["c-purple","c-pink","c-cyan"]
+  },
+  d: {
+    n: "🏚️ 童年阴影回归型造梦人",
+    e: "TRAUMA-COMEBACK DREAMER",
+    p: "你永远在梦里回到某个已经消失的地方。老家的房子、早已毕业的教室、那条被拆掉的小巷。你在梦里像个考古学家，试图在废墟中找到些什么。每次醒来都有种「我真的回不去了吗」的破防感。",
+    x: "精神分析管这叫「未完成的梦工作」—— 那些你以为放下了的人和事，大脑比你诚实。废墟梦是你潜意识里的一个未读小红点，它在提醒你：有些告别，你还没有真正完成。",
+    f: "梦见童年的房子，其实是大脑在整理记忆碎片。25-35岁的人最容易做这类梦，因为这个年纪的我们，正在经历一场漫长的「失去」—— 失去童年，失去青春，失去那个不用负责任的自己。",
+    m: "梦里回到了老房子\n→ 推开门\n→ 发现小时候的自己坐在那里\n→ 想跟他说点什么\n→ 醒了\n\n—— 这大概是世界上最让人窒息的穿越剧\n编剧、导演、主演，都是我自己",
+    tg: ["未完成哀悼", "时间穿越难民", "怀旧重症", "记忆考古学家"],
+    tc: ["c-yellow","c-purple","c-orange"]
+  },
+  e: {
+    n: "✨ 绝绝子型造梦人",
+    e: "FANTASTIC DREAMER",
+    p: "你是梦里的超级VIP，有专属入场通道。你知道自己在做梦，还能控制剧情走向。你在梦里飞过、和偶像对话、解决了现实中的大难题。别人的梦是随机播放，你的梦是有会员超前点播的人生Plus版。",
+    x: "清醒梦是一种可以训练的技能，但能经常做清醒梦的人，往往具有超强的元认知能力—— 你不只是思考，你还知道自己在思考。你在梦里也在观察自己，说明你现实中也是那种活得特别清醒的人。",
+    f: "NASA研究过清醒梦，发现清醒梦状态下大脑创意输出比平时高出40%。别人睡觉是充电，你睡觉是开挂。如果你清醒梦够多，你可能真的是那种「心想事成」体质——只不过只在梦里成。",
+    m: "普通人的梦：被追着跑\n你的梦：被追 → 停下转身 →\n掏出名片：'追我之前先查查我的背景'\n\n—— 梦中霸总，梦中精英，梦中人生赢家\n醒来的我：房租还没交😇",
+    tg: ["清醒梦大师", "梦中人生赢家", "元认知强者", "会员专属做梦人"],
+    tc: ["c-cyan","c-purple","c-green"]
+  },
+  f: {
+    n: "💀 卡在高潮前型造梦人",
+    e: "CLIFFHANGER DREAMER",
+    p: "你是梦界的断更UP主，永远卡在高潮前下课。考试刚发卷子铃响了，要亲上了被摇醒了，要跳下去发现还有二十层。你的人生是《巴啦啦小魔仙》全身都无法变身，你是Netflix cliffhanger付费课程的终身VIP。",
+    x: "你是典型的「睡眠碎片化」受害者。你的睡眠质量堪忧，大脑刚进入深度创作模式就被唤醒了。另一种可能是你对很多事情有悬而未决的焦虑，梦里继续帮你未完待续。现实里没搞定的事，梦里也不让你好好做完。",
+    f: "REM睡眠被反复打断会导致记忆碎片化、情绪调节能力下降、注意力不集中。你白天的健忘，可能就是晚上梦没做完的锅。起床气可能不是脾气差，是你的潜意识在抗议：我还没做完呢！",
+    m: "每个梦都是Netflix cliffhanger\n结局永远在下一秒\n而我永远活不到下一秒\n\n—— 梦界《权游》，大结局永不更新\n\n醒来：'然后呢？？？'\n室友：'你说什么？'\n我：'没什么'",
+    tg: ["梦界断更大师", "悬念爱好者", "永远差一口气", "起床气max"],
+    tc: ["c-orange","c-yellow","c-pink"]
+  },
+  g: {
+    n: "🎙️ 碎碎念型造梦人",
+    e: "NARRATOR DREAMER",
+    p: "你不只是做梦，你是梦的导演、编剧、场务和第一观众。你在梦里讲评书，在梦里给每个NPC写人物小传。你是梦境的灵魂解说员，你的梦是有弹幕版本的连续剧，你是唯一看过全集的人。醒来第一件事：记笔记。",
+    x: "你是典型的「高自我意识型造梦人」。你在梦里也保持着对自己的观察，说明你在现实中是有主见、善于反思的类型。你的梦是你创意的演练场，你的大脑是24小时运转的内容工作室——还不用牛马工资。",
+    f: "能记住并讲述梦境的人，往往具有超强的叙事能力和语言组织能力。你的大脑天然是一个故事生成器，还是免费版的。别人花钱买娱乐，你睡觉就是娱乐顺便创作，产出还比别人高。",
+    m: "梦境解说版：\n'注意看，这个男人叫小帅，\n他正面临人生最艰难的选择——'\n我：'等等让我想一下接下来会发生什么'\n我：'好的继续'\n\n—— 编剧、导演、解说、观众，全是我\n\n室友：你睡觉的时候在说什么？\n我：工作。",
+    tg: ["梦中编剧", "创意生成器", "脑内内容工作室", "睡觉都在加班"],
+    tc: ["c-purple","c-green","c-cyan"]
+  },
+  h: {
+    n: "😳 社死专业户型造梦人",
+    e: "CRINGE NIGHTMARE DREAMER",
+    p: "你梦里的台词永远比现实离谱十倍。你在梦里说过不该说的话，做过不该做的事，在梦里出糗的种类比你的现实生活丰富一百倍。你的梦是你社死的专属秀场，你是唯一的演员、导演，和唯一想消失的观众。",
+    x: "社会性死亡型造梦人是焦虑型人格在梦里的投射。你在现实中太在意别人的看法了，以至于连梦里那个「假装不在意」的你都被潜意识出卖了。大脑在用梦帮你预演各种尴尬场景——某种程度上说，你是最有危机意识的卷王。",
+    f: "研究显示，羞耻感相关的梦境与现实中的社交焦虑高度相关。所以如果你经常做社死梦，恭喜你，你在梦里已经完成了现实中不敢尝试的社死练习，还练了好几遍。现实社交小透明，梦里社死大明星。",
+    m: "现实里：'这个红烧肉真好吃'\n\n梦里：'这个红烧肉像我死去的爱情，\n我要为它写一首诗'\n全场寂静💀\n\n—— 醒来想了三天这梦我到底在说啥\n\n室友：'你睡觉的时候说了句什么'\n我（假装镇定）：'没什么，念经'",
+    tg: ["社交焦虑投射", "梦中社死MVP", "过度在意他人看法", "现实唯唯诺诺梦里重拳出击"],
+    tc: ["c-orange","c-pink","c-yellow"]
+  },
+  i: {
+    n: "🛌 躺平摆烂型造梦人",
+    e: "TOTAL-LAMIAN DREAMER",
+    p: "你是梦界的躺平冠军。你不追求刺激，不搞梦中变形，不飞不跳不追不被追。你的梦可能是全世界最无聊的——要么一片黑，要么特别平淡，醒来直接失忆。你是梦里最佛系的。别人做噩梦，你纯睡觉。🐱‍👤的命，🐱‍👤的梦。",
+    x: "「不做梦」或者记不住梦，反而是一种心理健康的表现。你是一个不容易被情绪消耗的人，睡商（Sleep Quality）可能比大多数人都高。你的人生没有那么多内心戏。不做梦，可能就是你现实不内耗的最好证明。平平淡淡，才是真。",
+    f: "其实不做梦的人往往也做梦，只是REM睡眠阶段短或记忆编码能力弱。从积极角度看，你的潜意识可能很平静，没什么需要通过梦来处理的大事件。你的精神状态：遥遥领先美丽。",
+    m: "别人：'我梦见我从悬崖跳下去然后飞起来了！太刺激了！'\n\n你：'我昨晚睡得挺好的'\n\n—— 梦界的躺平冠军，🐱‍👤中的🐱‍👤，精神状态遥遥领先美丽\n\n室友：'你做什么梦了？'\n你：'没做梦'\n我：'关机了'",
+    tg: ["睡商极高", "精神状态美丽", "躺平本躺", "🐱‍👤难民"],
+    tc: ["c-green","c-cyan","c-purple"]
+  }
+};
+
+const QUNITS = ["一","二","三","四","五","六","七","八","九","十","十一","十二","十三","十四","十五","十六","十七","十八","十九","二十"];
+let cur = 0;
+let SC = {};
+const K = Object.keys(T);
+
+function initSC() { SC = {}; K.forEach(k => SC[k]=0); }
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startTest() { cur=0; initSC(); show('screen-question'); renderQ(); }
+
+function renderQ() {
+  const q = Q[cur];
+  document.getElementById('progFill').style.width = (cur/Q.length*100)+'%';
+  document.getElementById('progNum').textContent = cur+1;
+  document.getElementById('qNumDisp').textContent = QUNITS[cur];
+  document.getElementById('qText').textContent = q.t;
+  document.getElementById('qHint').textContent = q.h;
+  const oc = document.getElementById('qOpts');
+  oc.innerHTML = '';
+  q.o.forEach((o,i) => {
+    const btn = document.createElement('div');
+    btn.className = 'q-opt';
+    btn.innerHTML = `<div class="opt-num">${i+1}</div><div class="opt-txt">${o.txt}</div>`;
+    btn.onclick = () => pick(o.s);
+    oc.appendChild(btn);
+  });
+}
+
+function pick(s) {
+  K.forEach(k => { if(s[k]) SC[k] += s[k]; });
+  cur++;
+  if (cur >= Q.length) { showLoading(); }
+  else {
+    const oc = document.getElementById('qOpts');
+    oc.style.opacity='0'; oc.style.transform='translateY(8px)';
+    setTimeout(()=>{ renderQ(); oc.style.transition='all 0.25s'; oc.style.opacity='1'; oc.style.transform='translateY(0)'; }, 110);
+  }
+}
+
+const LM = ['正在分析你的梦境频率...','正在调用超雄战神模式...','正在给起床困难户打分...','正在生成社死名场面...','快好了，再睡一会...','你的梦正在被归档...','绝绝子正在加载中...'];
+let lidx=0;
+function showLoading() {
+  show('screen-loading');
+  const lv = setInterval(()=>{ document.getElementById('loadMsg').textContent = LM[lidx%LM.length]; lidx++; }, 600);
+  setTimeout(()=>{ clearInterval(lv); showResult(); }, 3800);
+}
+
+function topType() {
+  let mx=-1, w='i';
+  K.forEach(k=>{ if(SC[k]>mx){ mx=SC[k]; w=k; }});
+  return w;
+}
+
+function showResult() {
+  const k = topType(), t=T[k];
+  document.getElementById('rEmoji').textContent = t.n.split(' ')[0];
+  document.getElementById('rName').textContent = t.n.substring(t.n.indexOf(' ')+1);
+  document.getElementById('rEn').textContent = t.e;
+  document.getElementById('rProfile').textContent = t.p;
+  document.getElementById('rAnalysis').textContent = t.x;
+  document.getElementById('rFact').textContent = t.f;
+  document.getElementById('rMeme').textContent = t.m;
+  const tgEl = document.getElementById('rTags');
+  tgEl.innerHTML='';
+  t.tg.forEach((tg,i)=>{
+    const s=document.createElement('span');
+    s.className='r-tag '+t.tc[i%t.tc.length];
+    s.textContent=tg;
+    tgEl.appendChild(s);
+  });
+  show('screen-result');
+}
+
+function shareRes() {
+  const k=topType(), t=T[k];
+  const txt=`${t.n}\n\n${t.p}\n\n😂 ${t.m}\n\n🏷️ ${t.tg.join(' · ')}\n\n👉 你是哪种造梦人？测测看！`;
+  if(navigator.share) navigator.share({title:'你是哪种造梦人？',text:txt});
+  else navigator.clipboard.writeText(txt).then(()=>alert('结果已复制！快去发给朋友 😂'));
+}
+
+function restartTest() { startTest(); }
+</script>
+</body>
+</html>
