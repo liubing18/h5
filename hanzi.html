@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>汉字能量测算</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#f5f5f0;min-height:100vh;font-family:'PingFang SC','Microsoft YaHei',sans-serif}
+.container{max-width:600px;margin:40px auto;padding:20px}
+h1{text-align:center;font-size:28px;font-weight:600;color:#333;margin-bottom:30px}
+.input-section{display:flex;gap:10px;margin-bottom:20px}
+input{flex:1;padding:12px;font-size:16px;border:2px solid #333;background:#fff}
+button{padding:12px 24px;font-size:16px;background:#333;color:#fff;border:none;cursor:pointer}
+button:hover{background:#555}
+.result-section{display:none;background:#fff;padding:20px;margin-top:20px;border:2px solid #333}
+.cube-container{width:280px;height:280px;margin:15px auto}
+canvas{width:100%;height:100%}
+.char-list{text-align:left;margin:15px 0;padding:15px;background:#f9f9f9}
+.char-item{margin:8px 0;font-size:18px}
+.char-item span{font-weight:600;margin-right:10px}
+.total-section{text-align:center;margin:20px 0;padding:20px;background:linear-gradient(135deg,#fff8dc 0%,#ffefd5 50%,#ffe4b5 100%);color:#333;border-radius:8px}
+.total-label{font-size:16px;margin-bottom:5px}
+.total-energy{font-size:48px;font-weight:600}
+.energy-level{font-size:20px;margin-top:5px;opacity:0.8}
+.level-guide{margin:15px 0;padding:15px;background:#f9f9f9;border:1px solid #ddd}
+.level-guide-title{font-size:14px;font-weight:600;margin-bottom:10px;color:#666}
+.level-bar{height:25px;border-radius:3px;background:linear-gradient(to right,#9e0142,#d53e4f,#f46d43,#fdae61,#fee08b,#e6f598,#abdda4,#66c2a5,#3288bd,#5e4fa2)}
+.level-labels{display:flex;justify-content:space-between;margin-top:5px;font-size:10px;color:#999}
+.current-level{margin-top:10px;text-align:center;font-size:14px;color:#333}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>汉字能量测算</h1>
+<div class="input-section">
+<input type="text" id="inputName" placeholder="请输入姓名或汉字" maxlength="10">
+<button id="calcBtn">测算</button>
+</div>
+<div class="result-section" id="resultSection">
+<div class="cube-container">
+<canvas id="cubeCanvas" width="280" height="280"></canvas>
+</div>
+<div class="char-list" id="charList"></div>
+<div class="total-section">
+<div class="total-label">综合能量</div>
+<div class="total-energy" id="totalEnergy">0</div>
+<div class="energy-level" id="energyLevel">一级能量</div>
+</div>
+<div class="level-guide">
+<div class="level-guide-title">能量等级说明</div>
+<div class="level-bar"></div>
+<div class="level-labels"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span></div>
+<div class="current-level" id="currentLevel"></div>
+</div>
+</div>
+</div>
+
+<script>
+// 配位数能量参数表
+var ENERGY_TABLE = {
+  2: { kinetic: 92.5, strength: 1.8 },
+  3: { kinetic: 240, strength: 4.8 },
+  4: { kinetic: 648, strength: 12.9 },
+  6: { kinetic: 4800, strength: 96 },
+  8: { kinetic: 36000, strength: 720 }
+};
+
+// 笔画数
+var STROKES = {
+  '一':1,'二':2,'三':3,'四':5,'五':4,'六':4,'七':2,'八':2,'九':2,'十':2,
+  '天':4,'地':6,'人':2,'神':9,'仙':5,'佛':7,'道':12,'心':4,'灵':7,
+  '张':7,'李':7,'王':4,'刘':6,'陈':7,'杨':7,'赵':9,'黄':11,'周':8,'吴':7,
+  '晓':10,'霞':17,'明':8,'华':6,'国':8,'家':10,'美':9,'好':6,'大':3,'小':3,
+  '金':8,'木':4,'水':4,'火':4,'土':3,'山':3,'海':10,'风':4,'云':4,
+  '爱':10,'情':11,'命':8,'运':7,'福':13,'禄':12,'寿':7,'喜':12,
+  '阳':6,'阴':6,'乾':11,'坤':8,'震':13,'巽':12,'离':10,'坎':5,'艮':6,'兑':7,
+  '冰':6,'飞':9,'鸟':5,'龙':5,'凤':4,'花':7
+};
+
+function getStrokeCount(char) {
+  return STROKES[char] || (char.charCodeAt(0) % 15 + 1);
+}
+
+function getStructureType(char) {
+  var simple = ['一','二','三','人','天','地','心','木','火','水','土','金','山','大','小'];
+  return simple.indexOf(char) >= 0 ? 2 : 1;
+}
+
+function getCoordinationNumber(strokes, structureFactor) {
+  var raw = strokes / 2 * structureFactor;
+  var valid = [2, 3, 4, 6, 8];
+  var nearest = valid[0];
+  for (var i = 0; i < valid.length; i++) {
+    if (Math.abs(valid[i] - raw) < Math.abs(nearest - raw)) {
+      nearest = valid[i];
+    }
+  }
+  return nearest;
+}
+
+function calculateCharEnergy(char) {
+  var strokes = getStrokeCount(char);
+  var structureFactor = getStructureType(char);
+  var coordNum = getCoordinationNumber(strokes, structureFactor);
+  var baseEnergy = ENERGY_TABLE[coordNum];
+  var strokeFactor = 1 + (strokes % 10) * 0.01;
+  var energy = Math.round(baseEnergy.kinetic * strokeFactor);
+  return { char: char, strokes: strokes, energy: energy };
+}
+
+function getEnergyLevel(energy) {
+  if (energy <= 100) return '一级能量';
+  if (energy <= 300) return '二级能量';
+  if (energy <= 600) return '三级能量';
+  if (energy <= 1000) return '四级能量';
+  if (energy <= 2000) return '五级能量';
+  if (energy <= 4000) return '六级能量';
+  if (energy <= 7000) return '七级能量';
+  if (energy <= 10000) return '八级能量';
+  if (energy <= 20000) return '九级能量';
+  return '十级能量';
+}
+
+function calculateNameEnergy(name) {
+  var chars = name.split('');
+  var charEnergies = [];
+  var product = 1;
+  
+  for (var i = 0; i < chars.length; i++) {
+    var ce = calculateCharEnergy(chars[i]);
+    charEnergies.push(ce);
+    product *= ce.energy;
+  }
+  
+  var geoMean = Math.pow(product, 1 / chars.length);
+  var countFactor = 1 + (chars.length - 1) * 0.15;
+  
+  var sum = 0;
+  for (var i = 0; i < charEnergies.length; i++) {
+    sum += charEnergies[i].energy;
+  }
+  var avgEnergy = sum / charEnergies.length;
+  
+  var variance = 0;
+  for (var i = 0; i < charEnergies.length; i++) {
+    variance += Math.pow(charEnergies[i].energy - avgEnergy, 2);
+  }
+  variance /= charEnergies.length;
+  var stdDev = Math.sqrt(variance);
+  
+  var resonanceFactor = stdDev < 100 ? 1.2 : (stdDev < 500 ? 1.0 : 0.8);
+  var totalEnergy = Math.round(geoMean * countFactor * resonanceFactor);
+  
+  return {
+    totalEnergy: totalEnergy,
+    level: getEnergyLevel(totalEnergy),
+    charEnergies: charEnergies
+  };
+}
+
+// 粒子系统
+var particles = [];
+var animationId = null;
+var targetShape = null;
+
+function initParticles(energy, name) {
+  particles = [];
+  var count = Math.min(Math.floor(energy / 5), 350);
+  
+  var totalStrokes = 0;
+  for (var i = 0; i < name.length; i++) {
+    totalStrokes += getStrokeCount(name[i]);
+  }
+  
+  var shapes = ['bird', 'cloud', 'flower', 'fish', 'dragon'];
+  if (totalStrokes < 15) targetShape = 'bird';
+  else if (totalStrokes < 20) targetShape = 'cloud';
+  else if (totalStrokes < 30) targetShape = 'flower';
+  else if (totalStrokes < 40) targetShape = 'fish';
+  else targetShape = 'dragon';
+  
+  for (var i = 0; i < count; i++) {
+    var target = getTargetPosition(i, count, targetShape);
+    particles.push({
+      x: 140, y: 140,
+      targetX: target.x,
+      targetY: target.y,
+      size: Math.random() * 3 + 3,
+      alpha: Math.random() * 0.3 + 0.7
+    });
+  }
+}
+
+function getTargetPosition(index, total, shape) {
+  var cx = 140, cy = 140;
+  var t = index / total;
+  
+  if (shape === 'bird') {
+    var angle = t * Math.PI * 4;
+    var r = 30 + Math.sin(angle * 2) * 40;
+    return { x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r * 0.5 - 20 };
+  } else if (shape === 'cloud') {
+    var layer = Math.floor(t * 3);
+    var a = (t * 3) % 1 * Math.PI * 2;
+    var r = 35 + layer * 20;
+    return { x: cx + Math.cos(a) * r, y: cy - 20 + layer * 20 + Math.sin(a) * r * 0.4 };
+  } else if (shape === 'flower') {
+    var petal = Math.floor(t * 6);
+    var pt = (t * 6) % 1;
+    var angle = (petal / 6) * Math.PI * 2;
+    var r = pt < 0.5 ? pt * 2 * 60 : (1 - pt) * 60;
+    return { x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r * 0.85 };
+  } else if (shape === 'fish') {
+    var angle = t * Math.PI * 2;
+    var rx = 60, ry = 30;
+    if (t > 0.85) {
+      var tt = (t - 0.85) / 0.15;
+      return { x: cx - 60 - tt * 30, y: cy + Math.sin(tt * Math.PI * 2) * 25 };
+    }
+    return { x: cx + Math.cos(angle) * rx, y: cy + Math.sin(angle) * ry };
+  } else {
+    var angle = t * Math.PI * 6;
+    var r = 20 + t * 55;
+    return { x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r * 0.4 };
+  }
+}
+
+// 全透视立方体绘制
+function drawCube(ctx) {
+  var cx = 140, cy = 145;
+  var size = 70;
+  
+  // 8个顶点（透视投影）
+  var vertices = [
+    {x: cx - size, y: cy - size},       // 前左上 0
+    {x: cx + size, y: cy - size},       // 前右上 1
+    {x: cx + size, y: cy + size},       // 前右下 2
+    {x: cx - size, y: cy + size},       // 前左下 3
+    {x: cx - size + 50, y: cy - size - 40},  // 后左上 4
+    {x: cx + size + 50, y: cy - size - 40},  // 后右上 5
+    {x: cx + size + 50, y: cy + size - 40},  // 后右下 6
+    {x: cx - size + 50, y: cy + size - 40}   // 后左下 7
+  ];
+  
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 2;
+  
+  // 后面（虚线）
+  ctx.setLineDash([8, 5]);
+  ctx.globalAlpha = 0.5;
+  ctx.beginPath();
+  ctx.moveTo(vertices[4].x, vertices[4].y);
+  ctx.lineTo(vertices[5].x, vertices[5].y);
+  ctx.lineTo(vertices[6].x, vertices[6].y);
+  ctx.lineTo(vertices[7].x, vertices[7].y);
+  ctx.closePath();
+  ctx.stroke();
+  
+  // 前面（实线）
+  ctx.setLineDash([]);
+  ctx.globalAlpha = 1;
+  ctx.beginPath();
+  ctx.moveTo(vertices[0].x, vertices[0].y);
+  ctx.lineTo(vertices[1].x, vertices[1].y);
+  ctx.lineTo(vertices[2].x, vertices[2].y);
+  ctx.lineTo(vertices[3].x, vertices[3].y);
+  ctx.closePath();
+  ctx.stroke();
+  
+  // 连接线（4条边）
+  ctx.globalAlpha = 0.7;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(vertices[0].x, vertices[0].y); ctx.lineTo(vertices[4].x, vertices[4].y);
+  ctx.moveTo(vertices[1].x, vertices[1].y); ctx.lineTo(vertices[5].x, vertices[5].y);
+  ctx.moveTo(vertices[2].x, vertices[2].y); ctx.lineTo(vertices[6].x, vertices[6].y);
+  ctx.moveTo(vertices[3].x, vertices[3].y); ctx.lineTo(vertices[7].x, vertices[7].y);
+  ctx.stroke();
+  
+  // 8个顶点
+  ctx.fillStyle = '#333';
+  ctx.globalAlpha = 1;
+  for (var i = 0; i < 8; i++) {
+    ctx.beginPath();
+    ctx.arc(vertices[i].x, vertices[i].y, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function animate(canvas) {
+  var ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, 280, 280);
+  
+  drawCube(ctx);
+  
+  ctx.fillStyle = 'rgba(255, 160, 80, 0.8)';
+  for (var i = 0; i < particles.length; i++) {
+    var p = particles[i];
+    p.x += (p.targetX - p.x) * 0.015;
+    p.y += (p.targetY - p.y) * 0.015;
+    p.x += Math.sin(Date.now() * 0.0008 + i * 0.5) * 0.3;
+    p.y += Math.cos(Date.now() * 0.0008 + i * 0.5) * 0.3;
+    
+    ctx.globalAlpha = p.alpha;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  
+  animationId = requestAnimationFrame(function() { animate(canvas); });
+}
+
+function calculate() {
+  var name = document.getElementById('inputName').value.trim();
+  if (!name) { alert('请输入汉字或姓名'); return; }
+  
+  var result = calculateNameEnergy(name);
+  document.getElementById('resultSection').style.display = 'block';
+  
+  var listHtml = '';
+  for (var i = 0; i < result.charEnergies.length; i++) {
+    var c = result.charEnergies[i];
+    listHtml += '<div class="char-item"><span>' + c.char + '：</span>能量 ' + c.energy + '</div>';
+  }
+  document.getElementById('charList').innerHTML = listHtml;
+  
+  document.getElementById('totalEnergy').textContent = result.totalEnergy;
+  document.getElementById('energyLevel').textContent = result.level;
+  
+  var levelNum = 1;
+  if (result.totalEnergy > 20000) levelNum = 10;
+  else if (result.totalEnergy > 10000) levelNum = 9;
+  else if (result.totalEnergy > 7000) levelNum = 8;
+  else if (result.totalEnergy > 4000) levelNum = 7;
+  else if (result.totalEnergy > 2000) levelNum = 6;
+  else if (result.totalEnergy > 1000) levelNum = 5;
+  else if (result.totalEnergy > 600) levelNum = 4;
+  else if (result.totalEnergy > 300) levelNum = 3;
+  else if (result.totalEnergy > 100) levelNum = 2;
+  
+  document.getElementById('currentLevel').textContent = '当前能量位于第 ' + levelNum + ' 级区间';
+  
+  var canvas = document.getElementById('cubeCanvas');
+  if (animationId) cancelAnimationFrame(animationId);
+  initParticles(result.totalEnergy, name);
+  animate(canvas);
+}
+
+document.getElementById('calcBtn').onclick = calculate;
+</script>
+</body>
+</html>
