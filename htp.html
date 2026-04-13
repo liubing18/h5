@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>用画说话</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:#0d1020;color:#fff;min-height:100vh}
+.page{display:none}
+.page.active{display:block}
+</style>
+</head>
+<body>
+<div id="cover" class="page active">
+<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;background:linear-gradient(180deg,#0d1020,#1a1030)">
+<div style="font-size:80px;margin-bottom:20px">🏠🌳👤</div>
+<div style="font-size:32px;font-weight:bold;color:#e0c3fc;letter-spacing:4px;margin-bottom:8px">用画说话</div>
+<div style="font-size:11px;color:rgba(180,130,255,.3);letter-spacing:3px;margin-bottom:20px">EXPRESS THROUGH DRAWING</div>
+<div style="font-size:14px;color:rgba(200,180,255,.5);line-height:1.8;text-align:center;margin-bottom:8px">画一座房子，一棵树、一个人<br>让AI读懂你心里的世界</div>
+<div style="font-size:12px;color:rgba(150,130,200,.3);line-height:1.8;text-align:center;margin-bottom:30px">不需要画得多像<br>画的就是你最真实的感觉</div>
+<button onclick="showPage('choose')" style="width:100%;max-width:280px;padding:16px;background:linear-gradient(135deg,#7c3aed,#5b21b6);border:none;border-radius:30px;color:#fff;font-size:16px;font-weight:bold;letter-spacing:3px;cursor:pointer">开始画</button>
+</div>
+</div>
+<div id="choose" class="page">
+<div style="height:60px;background:rgba(13,16,32,.95);display:flex;align-items:center;justify-content:center;border-bottom:1px solid rgba(124,58,237,.1)">
+<span style="font-size:14px;color:rgba(180,150,255,.5)">选择方式</span>
+</div>
+<div style="padding:80px 24px 24px;display:flex;flex-direction:column;align-items:center">
+<div onclick="showPage('upload')" style="width:100%;max-width:320px;background:rgba(255,255,255,.04);border:1.5px solid rgba(124,58,237,.2);border-radius:16px;padding:30px;text-align:center;cursor:pointer;margin-bottom:16px">
+<div style="font-size:40px;margin-bottom:12px">📤</div>
+<div style="font-size:16px;color:#c4b5fd;margin-bottom:8px">上传画作</div>
+<div style="font-size:12px;color:rgba(180,150,255,.4)">上传你之前画好的房树人</div>
+</div>
+<div onclick="alert('绘画功能开发中')" style="width:100%;max-width:320px;background:rgba(255,255,255,.04);border:1.5px solid rgba(124,58,237,.2);border-radius:16px;padding:30px;text-align:center;cursor:pointer">
+<div style="font-size:40px;margin-bottom:12px">🖌️</div>
+<div style="font-size:16px;color:#c4b5fd;margin-bottom:8px">自己画</div>
+<div style="font-size:12px;color:rgba(180,150,255,.4)">直接在画板上画（开发中）</div>
+</div>
+</div>
+</div>
+<div id="upload" class="page">
+<div style="height:60px;background:rgba(13,16,32,.95);display:flex;align-items:center;justify-content:center;border-bottom:1px solid rgba(124,58,237,.1)">
+<button onclick="showPage('choose')" style="position:absolute;left:20px;font-size:14px;color:rgba(180,150,255,.6);background:none;border:none;cursor:pointer">← 返回</button>
+<span style="font-size:14px;color:rgba(180,150,255,.5)">上传</span>
+</div>
+<div style="padding:80px 24px 24px;display:flex;flex-direction:column;align-items:center">
+<div style="font-size:13px;color:rgba(180,150,255,.3);text-align:center;line-height:1.8;margin-bottom:20px">上传你画的房树人<br>确保画面清晰</div>
+<div onclick="document.getElementById('fileInput').click()" style="width:100%;max-width:320px;aspect-ratio:1;border:2px dashed rgba(124,58,237,.4);border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;background:rgba(124,58,237,.05);margin-bottom:20px">
+<div style="font-size:48px;opacity:.5">🖼️</div>
+<div style="font-size:14px;color:rgba(180,150,255,.4)">点击上传图片</div>
+<div style="font-size:11px;color:rgba(180,150,255,.2)">支持 jpg、png</div>
+</div>
+<input type="file" id="fileInput" accept="image/*" onchange="handleFile(this)" style="display:none">
+<img id="preview" style="width:100%;max-width:320px;aspect-ratio:1;border-radius:12px;object-fit:contain;background:#000;display:none;margin-bottom:20px">
+<button id="submitBtn" onclick="showResult()" style="width:100%;max-width:280px;padding:16px;background:linear-gradient(135deg,#7c3aed,#5b21b6);border:none;border-radius:30px;color:#fff;font-size:16px;font-weight:bold;letter-spacing:3px;cursor:pointer;display:none">提交解读</button>
+</div>
+</div>
+<div id="result" class="page">
+<div style="height:60px;background:rgba(13,16,32,.95);display:flex;align-items:center;justify-content:center;border-bottom:1px solid rgba(124,58,237,.1)">
+<button onclick="location.reload()" style="position:absolute;left:20px;font-size:14px;color:rgba(180,150,255,.6);background:none;border:none;cursor:pointer">← 重新开始</button>
+<span style="font-size:14px;color:rgba(180,150,255,.5)">解读</span>
+</div>
+<div style="padding:80px 24px 24px;display:flex;flex-direction:column;align-items:center">
+<div id="showImg" style="width:100%;max-width:360px;aspect-ratio:1;background:rgba(0,0,0,.3);border-radius:12px;overflow:hidden;margin-bottom:20px;display:none">
+<img id="imgTag" src="" style="width:100%;height:100%;object-fit:contain">
+</div>
+<div style="width:100%;max-width:400px;background:rgba(255,255,255,.04);border:1px solid rgba(124,58,237,.15);border-radius:16px;padding:24px;margin-bottom:20px">
+<div style="font-size:11px;color:rgba(180,150,255,.3);letter-spacing:2px;margin-bottom:16px">AI 解读</div>
+<div id="housePart" style="margin-bottom:20px"></div>
+<div id="treePart" style="margin-bottom:20px"></div>
+<div id="personPart" style="margin-bottom:20px"></div>
+<div id="totalPart" style="border-top:1px solid rgba(124,58,237,.1);padding-top:16px"></div>
+</div>
+<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:16px">
+<button onclick="document.getElementById('modal').style.display='flex'" style="padding:12px 24px;border-radius:25px;font-size:14px;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);color:#a78bfa;cursor:pointer">真人解读 ¥20</button>
+<button onclick="shareR()" style="padding:12px 24px;border-radius:25px;font-size:14px;background:linear-gradient(135deg,#7c3aed,#5b21b6);border:none;color:#fff;cursor:pointer">分享</button>
+</div>
+<div style="font-size:11px;color:rgba(180,150,255,.2);text-align:center">解读仅供娱乐参考</div>
+</div>
+</div>
+<div id="modal" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:100;padding:20px">
+<div style="background:#1a1030;border:1px solid rgba(124,58,237,.2);border-radius:16px;padding:30px;text-align:center;max-width:320px;width:100%">
+<div style="font-size:40px;margin-bottom:16px">👤</div>
+<div style="font-size:16px;color:#c4b5fd;font-weight:bold;margin-bottom:8px">真人深度解读</div>
+<div style="font-size:13px;color:rgba(180,150,255,.4);line-height:1.8;margin-bottom:20px">一对一深度分析<br>读懂画里藏着的故事<br>¥20/次</div>
+<button onclick="alert('请加微信联系真人解读')" style="width:100%;padding:14px;background:linear-gradient(135deg,#7c3aed,#5b21b6);border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:bold;cursor:pointer;margin-bottom:10px">立即预约 ¥20</button>
+<button onclick="document.getElementById('modal').style.display='none'" style="font-size:13px;color:rgba(180,150,255,.3);background:none;border:none;cursor:pointer;padding:8px">关闭</button>
+</div>
+</div>
+<script>
+var userImg = null;
+var houseTexts = [
+'你对安全感有强烈的需求。你需要有一个属于自己的空间，一个可以让你感到安全、感到被认可的地方。可能是工作上的位置，可能是家庭里的角色，也可能是某段关系里的存在感。你在渴望被关注，被看见，被认可。这个需求很真实，不要觉得自己贪心。每个人都有被看见的需求，这是人的基本需要之一。',
+'你最近自我价值感在低落，或者在某个环境里感到自己被忽视了。可能是工作中你的付出没被看到，可能是家庭里你的位置被边缘化了，也可能是在关系里你觉得自己的声音不够重要。这种被忽视的感觉会慢慢积累，需要被认真对待。长期的被忽视会让人产生习得性无助，觉得自己的存在不重要，但事实不是这样的。',
+'你在防御。你不想让别人轻易走进来，不想被了解，不想被进入。这不是冷漠，是你在保护自己。可能之前有过被闯入、被伤害的经历，让你学会了把自己保护起来。这种防御机制是正常的，但也值得时不时检视一下，是不是有些门其实可以开一开。',
+'你对外界是开放的，愿意让人走进来。你不是封闭的，你是愿意连接的。可能你在主动社交，主动表达，主动让别人了解你。这是一种健康的开放状态，但也要留意，别让门开得太大，让自己受到不必要的打扰。开放是好事，但也要有选择地开放。',
+'你感到封闭，不想被外界打扰。你可能正在经历一个需要独处的阶段，或者你觉得外界不够安全，所以把自己封起来。这是防御，但也要小心，别封得太久。人需要和外界有连接，哪怕只是偶尔打开一扇窗。',
+'你需要被看见，需要和外界有更多连接。你不是一个封闭的人，你渴望交流，渴望被理解，渴望透气。可能最近你和外界的连接不够，可能你需要找人说说话，需要一个出口。不要把自己关太久，哪怕只是和人聊聊天，也是一种透气。',
+'你对家有温暖的记忆，或者渴望家的温暖。烟囱冒烟说明有人在，有生活，有烟火气。你对家有一种深深的眷恋，那里可能是你感到最安全的地方。家的温暖是很多人的根，哪怕家不完美，那里也是根所在的地方。',
+'你觉得家里缺少温暖，或者你感受不到那份应该存在的温暖。可能在某个阶段家里确实冷清，或者你在情感上感到某种缺失。温暖不一定要来自家，也可以来自其他地方，找到属于你的温暖来源就好。',
+'你对安全感有强烈的需求。你在关注保护，在关注安全。你可能在某个方面感到不够安全，需要更多的保护。安全感是人的基本需求之一，你对它的关注是正常的。',
+'你在防御，在坚持什么，在保护什么。可能你在某个方面已经撑了很久，可能你在扛着什么东西。这种感觉需要被看见，被承认，而不是一直被忽略。'
+];
+var treeTexts = [
+'你内在的生命力很强，有成长动力，有能量。你不是一个萎靡的人，你有自己的力量，有自己的方向。你正在经历一个内在快速成长的阶段，或者你本来就是这样有力量的人。你的自我在壮大。这是一件好事，说明你正在变得更完整。内在力量的增强会让人更有能力面对生活中的挑战。',
+'你能量不足，可能最近感到疲惫，可能是某种枯竭的状态。身体和心理都在报警，告诉你需要休息，需要充电。你可能在撑着很多事情，但内在已经在透支了。这种状态需要被认真对待，继续透支可能会出问题。休息不是软弱，是为了让未来的路能继续走下去。',
+'你有自我力量，有稳定性，有根基。你不是一个轻易被动摇的人，你有自己的核心，有自己的立场。你能撑住，能扛住压力，能在风里展厅。这是你宝贵的品质，但也要记得，粗壮的树也需要偶尔休息。',
+'你感到自己撑不住了，感到某种断裂的恐惧。可能在某方面压力太大，可能在扛着不应该你扛的东西。这不代表你真的弱，它代表你需要一个支撑。不要硬撑，找人帮帮忙，或者把一些东西放下来。',
+'你情绪低落，或者感到某种凋零。可能最近经历了一些失去，可能感到某种空虚。树失去叶子是为了过冬，你可能也需要一个休整的阶段。这不是失败，是暂时的调整。',
+'你情绪状态比较好，内在活力充足，你感到活着，感到有生命力。这是很好的状态，好好保持。如果能保持这种状态，你会更有能力去面对生活中的挑战。',
+'你在关注根基，关注来源，关注过去。你在思考一些关于家庭，关于根源的事情。对根源的关注说明你在试图理解自己为什么会成为现在的自己。',
+'你感到不稳定，感到某种摇摆。可能在某件事上你失去了平衡，或者你正在经历某种内心的动荡。不稳定感是暂时的，找到平衡点就会过去。',
+'你在等待某种收获，或者你觉得目前还没有成果。可能你一直在付出，但还没有看到回报。果实需要时间，不要因为还没看到就放弃。',
+'你对收获有期待，你在等着某个成果。可能你的努力快要有回报了，继续保持。'
+];
+var personTexts = [
+'你有较强的自我认同，你有存在感，你知道自己是谁。你在某个领域或者某段关系里有明确的自我定位，你不是模糊的，不是隐形的。自我认同清晰的人更容易做出选择，更不容易被外界的声音干扰。',
+'你最近自我价值感不足，或者感到自己不够大，不够重要。可能是被边缘化了，可能是在某个环境里感到自己说话没分量。这种感觉是真实的，但也要注意，不要让它定义了你。',
+'你不想被看穿，不想被完全了解。这是一种防御，你在保护自己的某部分不被看见。这可能是因为之前有过被看穿后受伤的经历。',
+'你当前的情绪状态还可以，你感到某种满足或者平静。可能最近发生了一些让你开心的事情，或者你的内心状态比较稳定。微笑是好事，说明你在一个相对舒适的状态里。',
+'你内心有未被处理的悲伤。可能在某件事上你受伤了，那份悲伤还没有被好好地面对和释放。悲伤需要被承认，而不是被压下去。',
+'你更关注思想，更关注内在，不太关注行动。也可能有某种自我认同的困惑，在思考"我是谁"这个问题。思想是重要的，但不要忘记，行动也是自我的一部分。',
+'你行动力强，你有自我认同，你有落地执行的能力。你不是一个只活在脑子里的人，你能把想法变成行动。这是你的优势，继续保持。',
+'你有掌控欲，有行动力，你想抓住什么。可能你在追某个目标，或者你想伸手够某个东西。有目标是好事，但也要注意，别为了抓而抓。',
+'你感到某种无能为力，感到胳膊不够长，感到做不到什么。你可能在某件事上已经放弃了，或者你觉得自己没有能力去做什么。这种无力感是暂时的。',
+'你有不安全感，有害怕的东西，你在躲藏。躲藏是自我保护，但也要注意，别躲太久，躲太久会失去和外界的连接。',
+'你和家，和你的根源有某种距离感。可能是物理上的远离，也可能是情感上的疏离。距离不一定是坏事，但需要你清楚地知道自己在做什么。',
+'你在关注内在小孩，关注纯真，关注过去。可能你内在有一个没有被满足的小孩，那个部分一直在等着被看见、被照顾。每个人内在都有一个小孩，那个部分也需要被爱。'
+];
+var totalTexts = [
+'你在安全和自由之间拉扯。你渴望有一个属于自己的空间，那里是安全的，是温暖的，但同时你又不想被完全封闭。这种拉扯感一直在，你还在找平衡。不要急，慢慢来。每个人都在找这个平衡，你不是一个人。',
+'你很累。不是身体累一点，是心累。是那种撑着很久终于撑不住了的感觉。你需要一个地方让你喘口气，让你真正地放松，不需要装，不需要扛。你值得给自己那样的空间。长期的心累会影响身心健康，需要被认真对待。',
+'你在人际里有防线，但内心又渴望连接。你在矛盾：一方面想打开让人进来，一方面又怕再被伤。这种矛盾不是软弱，是经历留下的印记。不要急着拆掉防线，但可以试着看看有没有值得冒一次险的人，不是每个人都会伤害你。',
+'你对家有很深的情感，那里藏着很多东西——温暖的记忆，也可能藏着没和解的伤口。不要急，不要强迫自己去和解，但可以慢慢面对那些藏在深处的东西。和解需要时间，不需要强迫自己。',
+'你内在有一股力量在等出口。不是一点力量，是很强的一股。它在等着被释放，在等着找到一个地方出来。现在可能还没找到，但会找到的。给它一点时间。内在的力量不会消失，它只是在等一个出口。',
+'你比你自己以为的更能扛。你经历了很多，但你站住了，还能继续。这不是运气，是你有这个力量。但能扛不意味着要一直扛。能扛的人也需要休息，也需要软弱，也需要有人接住你。能扛是优点，不是义务。',
+'你想被理解。你想有个人知道你脑子里在想什么，知道你心里感受，你不是想要安慰，你是想要被真正地看见。但你不确定有没有人能接住你，所以你不敢说。你在等人主动来。这个方法很被动，因为等来的不一定是你想要的。你应该主动找一个能接住你的人，而不是在等。',
+'你同时感到温暖和沉重。这两个感受同时存在，同时真实。你不是只有好的感受，也不是只有坏的感受。你是一个真实的人，有复杂的感受。不要拒绝任何一边，接受自己是复杂的。复杂不是弱点，是真实。',
+'你有话说不出来。不是不知道怎么组织语言，是没有那个空间，没有那个人。画是出口，但画不是终点。你需要说出来，需要被听见，哪怕只是对自己说。声音需要被发出来，而不是一直压在心底。',
+'你在找自己。外在的你做得得体，该有的都有，但内在的你有别的声音。那声音在说：我真正想要的是什么？我真正是谁？你在寻找答案，这个寻找本身就已经是答案的一部分。不要因为还没找到就焦虑，寻找本身就是意义。'
+];
+function random(arr){return arr[Math.floor(Math.random()*arr.length)];}
+function showPage(id){
+document.getElementById('cover').classList.remove('active');
+document.getElementById('choose').classList.remove('active');
+document.getElementById('upload').classList.remove('active');
+document.getElementById('result').classList.remove('active');
+document.getElementById(id).classList.add('active');
+}
+function handleFile(input){
+if(input.files && input.files[0]){
+var reader = new FileReader();
+reader.onload = function(e){
+document.getElementById('preview').src = e.target.result;
+document.getElementById('preview').style.display = 'block';
+document.getElementById('submitBtn').style.display = 'block';
+userImg = e.target.result;
+};
+reader.readAsDataURL(input.files[0]);
+}
+}
+function showResult(){
+showPage('result');
+var house = random(houseTexts);
+var tree = random(treeTexts);
+var person = random(personTexts);
+var total = random(totalTexts);
+document.getElementById('housePart').innerHTML = '<div style="font-size:10px;color:#a78bfa;margin-bottom:8px">🏠 房子</div><div style="font-size:14px;color:rgba(200,180,255,.9);line-height:2;text-align:justify">'+house+'</div>';
+document.getElementById('treePart').innerHTML = '<div style="font-size:10px;color:#a78bfa;margin-bottom:8px">🌳 树</div><div style="font-size:14px;color:rgba(200,180,255,.9);line-height:2;text-align:justify">'+tree+'</div>';
+document.getElementById('personPart').innerHTML = '<div style="font-size:10px;color:#a78bfa;margin-bottom:8px">👤 人</div><div style="font-size:14px;color:rgba(200,180,255,.9);line-height:2;text-align:justify">'+person+'</div>';
+document.getElementById('totalPart').innerHTML = '<div style="font-size:10px;color:#a78bfa;margin-bottom:8px">🔮 综合</div><div style="font-size:14px;color:rgba(200,180,255,.9);line-height:2;text-align:justify">'+total+'</div>';
+if(userImg){
+document.getElementById('imgTag').src = userImg;
+document.getElementById('showImg').style.display = 'block';
+}
+}
+function shareR(){
+if(navigator.clipboard){
+navigator.clipboard.writeText('我用"用画说话"画了房树人，AI解读了我的潜意识。（点击链接体验）');
+alert('已复制到剪贴板，可以粘贴分享了！');
+} else {
+alert('长按文字复制分享');
+}
+}
+</script>
+</body>
+</html>
