@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>画梦 - AI画出你的梦</title>
+<style>
+* {margin:0;padding:0;box-sizing:border-box}
+body {font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0a0618;color:#e0c3fc;overflow:hidden}
+.page {position:absolute;top:0;left:0;width:100%;height:100%;display:none;flex-direction:column;align-items:center;overflow-y:auto}
+.page.active {display:flex}
+
+/* 封面 */
+#cover {justify-content:center;padding:40px 24px;background:linear-gradient(180deg,#0a0618 0%,#1a0a2e 40%,#0d1b2a 100%)}
+.c-frame {text-align:center}
+.c-icon {font-size:56px;margin-bottom:16px;animation:float 3s ease-in-out infinite}
+.c-title {font-size:38px;font-weight:900;color:#e0c3fc;letter-spacing:8px;margin-bottom:6px}
+.c-en {font-size:10px;color:rgba(180,150,255,.3);letter-spacing:6px;margin-bottom:20px}
+.c-sub {font-size:13px;color:rgba(200,180,255,.5);line-height:2;margin-bottom:6px}
+.c-tip {font-size:11px;color:rgba(150,130,200,.3);margin-bottom:28px;line-height:1.8}
+.c-start {padding:15px 60px;background:linear-gradient(135deg,#7c3aed,#5b21b6);border:none;border-radius:50px;color:#fff;font-size:15px;font-weight:bold;letter-spacing:4px;cursor:pointer;box-shadow:0 8px 30px rgba(124,58,237,.4)}
+.c-price {position:absolute;top:16px;right:16px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.25);padding:4px 12px;border-radius:20px;font-size:11px;color:#a78bfa}
+@keyframes float {0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+/* 输入页 */
+#input {background:linear-gradient(180deg,#0d1020 0%,#1a1030 50%,#0d1020 100%);padding:0}
+.i-top {position:fixed;top:0;left:0;right:0;padding:14px 20px;background:rgba(13,16,32,.95);z-index:10;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(124,58,237,.1)}
+.i-back {font-size:12px;color:rgba(180,150,255,.5);background:none;border:none;cursor:pointer}
+.i-title {font-size:12px;color:rgba(180,150,255,.5);letter-spacing:3px}
+.i-body {flex:1;width:100%;padding:70px 20px 20px}
+.i-label {font-size:11px;color:rgba(180,150,255,.4);letter-spacing:2px;margin-bottom:10px}
+.i-area {width:100%;min-height:140px;background:rgba(255,255,255,.04);border:1px solid rgba(124,58,237,.2);border-radius:14px;padding:14px;font-size:14px;color:#e0c3fc;line-height:1.9;resize:none;outline:none}
+.i-area::placeholder {color:rgba(180,150,255,.25)}
+.i-area:focus {border-color:rgba(124,58,237,.5)}
+.i-tags {margin-top:14px;display:flex;flex-wrap:wrap;gap:8px}
+.i-tag {padding:5px 13px;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.15);border-radius:20px;font-size:11px;color:rgba(180,150,255,.5);cursor:pointer;border:none}
+.i-tag.sel {background:rgba(124,58,237,.2);border-color:rgba(124,58,237,.4);color:#c4b5fd}
+.i-styles {margin-top:16px;display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.i-style {display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(255,255,255,.03);border:1.5px solid rgba(124,58,237,.12);border-radius:12px;cursor:pointer}
+.i-style.sel {border-color:rgba(124,58,237,.6);background:rgba(124,58,237,.1)}
+.i-style-icon {font-size:22px}
+.i-style-name {font-size:13px;color:#c4b5fd;font-weight:500}
+.i-go {display:block;width:100%;padding:15px;border:none;border-radius:14px;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;font-size:15px;font-weight:bold;letter-spacing:3px;cursor:pointer;margin-top:auto}
+
+/* 结果页 */
+#result {background:#0a0618;padding:0}
+.r-top {position:fixed;top:0;left:0;right:0;padding:14px 20px;background:rgba(10,6,24,.95);z-index:10;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(124,58,237,.1)}
+.r-title {font-size:11px;color:rgba(180,150,255,.4);letter-spacing:4px}
+.r-back {font-size:11px;color:rgba(180,150,255,.4);background:none;border:none;cursor:pointer}
+.r-body {width:100%;padding:60px 0 40px;min-height:100vh}
+.r-card {width:100%;max-width:600px;background:rgba(255,255,255,.03);border:1px solid rgba(124,58,237,.1);border-radius:20px;padding:0;margin:0 auto 14px}
+.r-img-box {width:100%;height:280px;background:#0d1020;border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:10px}
+.r-img-box img {max-width:100%;max-height:100%;object-fit:contain}
+.r-loading {text-align:center;color:rgba(180,150,255,.4)}
+.r-loading-icon {font-size:32px;margin-bottom:8px;animation:float 2s ease-in-out infinite}
+.r-ana-title {font-size:11px;color:#a78bfa;letter-spacing:2px;margin-bottom:10px}
+.r-ana-text {font-size:12px;color:rgba(200,180,255,.7);line-height:1.8;white-space:pre-line}
+.r-btns {display:flex;gap:10px;justify-content:center;margin-top:20px}
+.r-btn {padding:10px 20px;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);border-radius:20px;color:#c4b5fd;font-size:12px;cursor:pointer}
+
+/* 分享弹窗 */
+.share-modal {position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(10,6,24,.92);z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+.share-modal.active {display:flex}
+.share-card {width:100%;max-width:340px;background:linear-gradient(180deg,#1a1030 0%,#0d1020 100%);border:1px solid rgba(124,58,237,.3);border-radius:20px;padding:24px;text-align:center}
+.share-icon {font-size:48px;margin-bottom:12px}
+.share-title {font-size:18px;color:#e0c3fc;font-weight:bold;margin-bottom:8px}
+.share-text {font-size:13px;color:rgba(180,150,255,.7);line-height:1.8;margin-bottom:16px}
+.share-btns {display:flex;gap:10px;justify-content:center}
+.share-btn {padding:10px 20px;background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.4);border-radius:20px;color:#c4b5fd;font-size:12px;cursor:pointer}
+
+/* 真人解梦弹窗 */
+.human-modal {position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(10,6,24,.92);z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+.human-modal.active {display:flex}
+.human-card {width:100%;max-width:340px;background:linear-gradient(180deg,#1a1030 0%,#0d1020 100%);border:1px solid rgba(124,58,237,.3);border-radius:20px;padding:24px;text-align:center}
+.human-icon {font-size:48px;margin-bottom:12px}
+.human-title {font-size:18px;color:#e0c3fc;font-weight:bold;margin-bottom:8px}
+.human-price {font-size:32px;color:#e8c840;font-weight:bold;margin:16px 0}
+.human-desc {font-size:13px;color:rgba(180,150,255,.7);line-height:1.8;margin-bottom:16px}
+.human-qr {width:160px;height:160px;background:#fff;margin:0 auto 16px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#333;font-size:12px}
+.human-btn {padding:12px 32px;background:linear-gradient(135deg,#7c3aed,#5b21b6);border:none;border-radius:20px;color:#fff;font-size:14px;font-weight:bold;cursor:pointer}
+</style>
+</head>
+<body>
+
+<!-- 封面 -->
+<div id="cover" class="page active">
+  <div class="c-price">AI生成 ¥2</div>
+  <div class="c-frame">
+    <div class="c-icon">🌙</div>
+    <div class="c-title">画梦</div>
+    <div class="c-en">DREAM CANVAS</div>
+    <div class="c-sub">描述你昨晚的梦<br>AI把它画成一张画</div>
+    <div class="c-tip">蛇、天空、已故的亲人<br>那些醒来后依然清晰的画面</div>
+    <button class="c-start" onclick="showPage('input')">开始画梦</button>
+  </div>
+</div>
+
+<!-- 输入页 -->
+<div id="input" class="page">
+  <div class="i-top">
+    <button class="i-back" onclick="showPage('cover')">← 返回</button>
+    <div class="i-title">画 梦</div>
+    <div style="width:40px"></div>
+  </div>
+  <div class="i-body">
+    <div class="i-label">描述你的梦</div>
+    <textarea class="i-area" id="dreamText" placeholder="比如：梦见一条巨大的白蛇在紫色的海边，天在下雨..."></textarea>
+    
+    <div class="i-tags">
+      <button class="i-tag" onclick="addTag('蛇')">🐍 蛇</button>
+      <button class="i-tag" onclick="addTag('水')">🌊 水</button>
+      <button class="i-tag" onclick="addTag('亲人')">👤 亲人</button>
+      <button class="i-tag" onclick="addTag('飞')">✈️ 飞行</button>
+      <button class="i-tag" onclick="addTag('追逐')">🏃 追逐</button>
+      <button class="i-tag" onclick="addTag('掉牙')">🦷 掉牙</button>
+    </div>
+    
+    <div class="i-label" style="margin-top:16px">选择画风</div>
+    <div class="i-styles" id="styleList"></div>
+    
+    <button class="i-go" onclick="generate()">生成我的梦 · ¥2</button>
+  </div>
+</div>
+
+<!-- 结果页 -->
+<div id="result" class="page">
+  <div class="r-top">
+    <div class="r-title">DREAM CANVAS</div>
+    <button class="r-back" onclick="showPage('input')">画新梦</button>
+  </div>
+  <div class="r-body" id="resultBody"></div>
+</div>
+
+<!-- 分享弹窗 -->
+<div class="share-modal" id="shareModal">
+  <div class="share-card">
+    <div class="share-icon">🌙</div>
+    <div class="share-title">分享我的梦</div>
+    <div class="share-text">长按保存图片<br>或复制文字分享给朋友</div>
+    <div class="share-btns">
+      <button class="share-btn" onclick="copyDream()">复制文字</button>
+      <button class="share-btn" onclick="closeShare()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 真人解梦弹窗 -->
+<div class="human-modal" id="humanModal">
+  <div class="human-card">
+    <div class="human-icon">🔮</div>
+    <div class="human-title">真人深度解梦</div>
+    <div class="human-price">¥20</div>
+    <div class="human-desc">专业解梦师一对一语音解读<br>时长约20分钟<br>帮你读懂梦里的隐藏信息</div>
+    <div class="human-qr">扫码支付</div>
+    <button class="human-btn" onclick="closeHumanModal()">我知道了</button>
+  </div>
+</div>
+
+<script>
+// 7种风格
+var styles=[
+  {name:'德·契里柯·形而上',icon:'🏛️',kw:'de Chirico style, empty plaza, long shadows'},
+  {name:'埃舍特·空间悖论',icon:'🌀',kw:'impossible architecture, paradox stairs'},
+  {name:'马格利特·超现实',icon:'🎩',kw:'Magritte style, floating objects'},
+  {name:'达利·融化超现实',icon:'🕐',kw:'Dali style, melting clocks'},
+  {name:'蒙克·情绪表现',icon:'😱',kw:'Munch style, expressionist'},
+  {name:'北斋·浮世绘',icon:'🌊',kw:'ukiyo-e style, Hokusai'},
+  {name:'赛博朋克·霓虹',icon:'🌃',kw:'cyberpunk, neon lights'}
+];
+var curStyle=0;
+var curDream='';
+
+// 初始化风格列表
+function initStyles(){
+  var html='';
+  for(var i=0;i<styles.length;i++){
+    var sel=i===0?'sel':'';
+    html+='<div class="i-style '+sel+'" onclick="selectStyle(this,'+i+')">';
+    html+='<div class="i-style-icon">'+styles[i].icon+'</div>';
+    html+='<div class="i-style-name">'+styles[i].name+'</div>';
+    html+='</div>';
+  }
+  document.getElementById('styleList').innerHTML=html;
+}
+
+function selectStyle(el,idx){
+  document.querySelectorAll('.i-style').forEach(function(s){s.classList.remove('sel')});
+  el.classList.add('sel');
+  curStyle=idx;
+}
+
+function addTag(txt){
+  var area=document.getElementById('dreamText');
+  area.value=area.value+(area.value?'，':'')+txt;
+}
+
+function showPage(id){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+  document.getElementById(id).classList.add('active');
+}
+
+function generate(){
+  var text=document.getElementById('dreamText').value.trim();
+  if(text.length<3){
+    alert('请描述一下你的梦～');
+    return;
+  }
+  curDream=text;
+  showPage('result');
+  
+  var analysis=analyzeDream(text);
+  
+  document.getElementById('resultBody').innerHTML=
+    '<div class="r-card">'+
+    '<div class="r-img-box"><div class="r-loading"><div class="r-loading-icon">🌙</div>画作生成中...</div></div>'+
+    '<div class="r-ana-title">梦境解读</div>'+
+    '<div class="r-ana-text">'+analysis+'</div>'+
+    '</div>';
+  
+  var prompt=text+'，'+styles[curStyle].kw+'，surreal dream art, high quality, detailed';
+  var imgUrl='https://image.pollinations.ai/prompt/'+encodeURIComponent(prompt)+'?width=480&height=280&nologo=true&seed='+Math.floor(Math.random()*99999);
+  
+  var img=new Image();
+  img.onload=function(){
+    document.getElementById('resultBody').innerHTML=
+      '<div class="r-card">'+
+      '<div class="r-img-box"><img src="'+imgUrl+'" alt="dream"></div>'+
+      '<div class="r-ana-title">梦境解读</div>'+
+      '<div class="r-ana-text">'+analysis+'</div>'+
+      '</div>'+
+      '<div class="r-btns">'+
+      '<button class="r-btn" onclick="shareDream()">分享</button>'+
+      '<button class="r-btn" onclick="showHumanModal()">真人解梦 ¥20</button>'+
+      '<button class="r-btn" onclick="location.reload()">再画一个</button>'+
+      '</div>';
+  };
+  img.onerror=function(){
+    document.querySelector('.r-loading').innerHTML='图片加载失败，请重试';
+  };
+  img.src=imgUrl;
+}
+
+function analyzeDream(text){
+  // 300个独立大类关键词库
+  var keywords={
+    // 动物类 - 50个
+    '蛇':'你心里有一个让你又爱又怕的东西，可能是欲望、变化，或某个不敢面对的自己。',
+    '龙':'你内心有一股巨大的力量在涌动，可能正站在人生的转折点上。',
+    '鸟':'你渴望自由，想要突破当下的限制，飞离现在的处境。',
+    '鱼':'你内心有很多情绪还没浮出水面，有些感受你还没办法命名。',
+    '猫':'你身边有一个让你捉摸不透的人，或你自己有这样一面——独立、神秘。',
+    '狗':'你对"被接纳"有很深的渴望，需要确认自己是被需要的。',
+    '马':'你内心有一股想要冲出去的力量，但可能被什么东西压抑着。',
+    '老虎':'你最近可能经历了某种冲突，内心有攻击性但不知道怎么表达。',
+    '狮子':'你对权力和地位有隐秘的渴望，想在某个领域说了算。',
+    '狼':'你既想要归属，又想要独立，这种矛盾让你感到孤独。',
+    '熊':'你最近压力很大，需要一个人躲起来静一静。',
+    '兔子':'你最近很敏感，容易受惊，可能在逃避某些东西。',
+    '蝴蝶':'你正在经历某种内在的变化，像毛毛虫变蝴蝶一样在蜕变。',
+    '蜘蛛':'你感到被某种关系或局面缠住了，越挣扎越紧。',
+    '蜜蜂':'你很忙碌，但不知道忙的意义，或感到被"叮"的威胁。',
+    '蚂蚁':'你觉得自己很渺小，但也在努力工作，可能感到被忽视。',
+    '蝎子':'你内心有某种危险的东西，可能是被压抑的愤怒或报复心。',
+    '鳄鱼':'你表面平静，但水下有危险，可能是隐藏的攻击性。',
+    '熊猫':'你觉得自己很珍贵，但也需要被保护，可能感到脆弱。',
+    '考拉':'你想要慢下来，抱着树什么都不做。',
+    '袋鼠':'你在跳跃式前进，或有想要保护的东西。',
+    '长颈鹿':'你想要看得更远，或感到自己与众不同。',
+    '斑马':'你在群体中既想融入又想保持独特。',
+    '犀牛':'你有蛮力和不可阻挡的一面。',
+    '河马':'你隐藏在水面下的情感体积很大。',
+    '大象':'你有巨大的记忆和不可忽视的存在感。',
+    '骆驼':'你在忍耐和背负很多东西。',
+    '鹿':'你很敏感，对危险有警觉。',
+    '豹子':'你有速度和优雅，或想要快速达成目标。',
+    '狐狸':'你有狡猾和智慧的一面。',
+    '刺猬':'你用刺保护自己，但内心柔软。',
+    '松鼠':'你在为未来囤积，可能有焦虑。',
+    '蝙蝠':'你在黑暗中生活，或与阴影共处。',
+    '猫头鹰':'你有智慧，能在黑暗中看清真相。',
+    '老鹰':'你有远见，想要俯瞰全局。',
+    '乌鸦':'你对某些事有不好的预感。',
+    '麻雀':'你很平凡但很顽强。',
+    '鸽子':'你渴望和平，或想要传递消息。',
+    '孔雀':'你想要展示自己，被欣赏。',
+    '鹦鹉':'你在重复别人的话，缺乏自己的表达。',
+    '天鹅':'你优雅但可能内心不平静。',
+    '鹤':'你超脱世俗，或渴望长寿。',
+    '鸳鸯':'你对忠贞爱情有期待。',
+    '金鱼':'你被圈养，或被观赏。',
+    '鲨鱼':'你感到威胁，或有攻击性。',
+    '鲸鱼':'你有巨大的情感深度。',
+    '海豚':'你聪明且善于社交。',
+    '章鱼':'你在多线操作，感到复杂。',
+    '水母':'你透明、脆弱，漂浮不定。',
+    '海星':'你觉得自己缺失了一部分。',
+    
+    // 人物类 - 50个
+    '母亲':'你的情感系统需要关注了，可能最近承担太多，需要被关心、被照顾。',
+    '父亲':'你正在面对某种权威或规则，你对它的态度反映了你怎么应对外部期待。',
+    '父母':'你在思考"规则"和"安全感"的问题。',
+    '小孩':'你内心有一个"内在小孩"需要被看见。',
+    '婴儿':'你可能在某个方面正在经历"重生"。',
+    '儿子':'你对传承和责任有焦虑。',
+    '女儿':'你内心柔软的部分需要被保护。',
+    '哥哥':'你在寻求保护，或想要成为保护者。',
+    '姐姐':'你在寻找榜样，或想要成为榜样。',
+    '弟弟':'你对被照顾有渴望。',
+    '妹妹':'你想要保护某个脆弱的东西。',
+    '前任':'那段关系里某个没解决的模式，正在你现在的生活中重演。',
+    '初恋':'你对纯真爱情的怀念。',
+    '情人':'你有被压抑的欲望。',
+    '爱人':'你对亲密关系的真实感受正在浮现。',
+    '老公':'你对婚姻关系的潜意识认知。',
+    '老婆':'你对伴侣关系的真实评价。',
+    '男朋友':'你对这段关系最真实的潜意识评价。',
+    '女朋友':'你对亲密关系的渴望或焦虑。',
+    '陌生人':'你梦见了你自己——那个你还不认识、不愿意承认的部分。',
+    '老人':'你对智慧、时间流逝的焦虑。',
+    '死人':'你对死亡的恐惧，或对已逝之人的思念。',
+    '尸体':'某个关系、计划，或你自己的某部分，正在"死去"。',
+    '骷髅':'你对生命有限的焦虑。',
+    '领导':'你在面对"被评判"的焦虑。',
+    '老板':'你在思考"权力"的问题。',
+    '同事':'你在社会比较中感到压力。',
+    '下属':'你对掌控力的渴望。',
+    '客户':'你对外部认可的依赖。',
+    '警察':'你内心有一个"监督者"在盯着你。',
+    '医生':'你在寻求治愈。',
+    '护士':'你需要被照顾。',
+    '老师':'你正处于"被评判"的状态。',
+    '同学':'某个场景触发了你学生时期的记忆。',
+    '朋友':'你现在的人际关系状态。',
+    '敌人':'你梦见了你自己——那些你不愿承认的特质。',
+    '明星':'你对被关注的渴望。',
+    '名人':'你对成功的渴望。',
+    '乞丐':'你对贫穷和失去一切的深层恐惧。',
+    '国王':'你对绝对权力的渴望。',
+    '女王':'你对强大女性力量的向往。',
+    '公主':'你对被宠爱和保护的需求。',
+    '王子':'你对理想伴侣的幻想。',
+    '英雄':'你想要成为拯救者，或希望有人来拯救你。',
+    '怪物':'你内心最恐惧的东西。',
+    '鬼':'你无法面对的恐惧。',
+    '僵尸':'某种"死去但没完"的关系或状态。',
+    '吸血鬼':'你被消耗的感觉。',
+    '外星人':'你对未知的恐惧，或"不属于这里"的疏离感。',
+    '机器人':'你觉得自己被程序化。',
+    
+    // 场景地点类 - 50个
+    '家':'你最私密的心理空间。',
+    '房子':'你自己的心理结构。',
+    '房间':'你内心的某个特定面向。',
+    '卧室':'亲密关系、休息和脆弱。',
+    '客厅':'你的公众形象。',
+    '厨房':'滋养和转化。',
+    '浴室':'你想要"洗干净"某些东西。',
+    '厕所':'你需要释放一些东西。',
+    '阳台':'你对外界的渴望和对安全的矛盾。',
+    '花园':'你对美好生活的向往。',
+    '院子':'你的私人空间。',
+    '门口':'你站在某个入口，需要决定是否进入。',
+    '窗户':'你和外部世界的边界。',
+    '门':'机会和障碍。',
+    '锁':'有东西阻碍着你。',
+    '钥匙':'你有解决问题的能力。',
+    '楼梯':'你正在努力攀爬某件事。',
+    '电梯':'你的人生轨迹。',
+    '走廊':'过渡期。',
+    '地下室':'你潜意识深处。',
+    '阁楼':'你的记忆和过去。',
+    '屋顶':'你想要超越现状。',
+    '学校':'你害怕被评判。',
+    '教室':'你正处于"被考核"的状态。',
+    '考场':'你对失败的恐惧。',
+    '图书馆':'你对知识的渴望。',
+    '公司':'你在职场中的感受。',
+    '办公室':'你的工作状态。',
+    '医院':'你感到脆弱，需要被照顾。',
+    '病房':'你需要休息和修复。',
+    '手术室':'你需要"动刀子"了。',
+    '监狱':'你感到被困住了。',
+    '牢房':'你被限制在很小的空间里。',
+    '法庭':'你在审判自己。',
+    '教堂':'你在寻求救赎。',
+    '寺庙':'你对内心平静的渴望。',
+    '墓地':'你对死亡和失去的恐惧。',
+    '坟':'你在哀悼某个失去。',
+    '棺材':'某个旧的你正在死去。',
+    '路':'你的人生路径。',
+    '大街':'你在人群中，可能感到迷失。',
+    '小巷':'你选择了人少的、非主流的路。',
+    '十字路口':'你面临重大选择。',
+    '桥':'你正在从一个阶段走向另一个阶段。',
+    '隧道':'你正在穿越一段黑暗。',
+    '迷宫':'你在某个问题上完全迷失了方向。',
+    '沙漠':'情感干涸。',
+    '绿洲':'绝望中的希望。',
+    '森林':'你感到迷失。',
+    
+    // 自然元素类 - 50个
+    '树':'成长与扎根。',
+    '大树':'你想要依靠。',
+    '花':'美好与短暂。',
+    '玫瑰':'爱情与刺痛。',
+    '叶子':'周期变化。',
+    '根':'根基与来源。',
+    '果实':'收获与成熟。',
+    '种子':'新开始。',
+    '草':'平凡生命力。',
+    '泥土':'根基与混乱。',
+    '石头':'阻碍与支撑。',
+    '山':'障碍与挑战。',
+    '山顶':'高点与成就。',
+    '悬崖':'边缘与选择。',
+    '山谷':'低谷与积蓄。',
+    '天空':'无限可能。',
+    '云':'迷茫与遮蔽。',
+    '太阳':'生命力与理性。',
+    '月亮':'情感与直觉。',
+    '星星':'希望与指引。',
+    '彩虹':'风雨后希望。',
+    '雪':'情感冻结。',
+    '冰':'防御与冷漠。',
+    '雨':'情感释放。',
+    '暴风雨':'强烈情感爆发。',
+    '风':'变化与不确定。',
+    '龙卷风':'混乱与毁灭。',
+    '雷':'突然冲击。',
+    '闪电':'洞察与冲击。',
+    '火':'愤怒与激情。',
+    '火灾':'毁灭性改变。',
+    '烟':'看不清真相。',
+    '雾':'迷茫。',
+    '灰尘':'被忽视的细节。',
+    '垃圾':'想要丢弃的东西。',
+    '废墟':'崩溃与重建。',
+    '海':'巨大情感深度。',
+    '大海':'未知与吸引。',
+    '海边':'边界与选择。',
+    '沙滩':'过渡期。',
+    '河':'时间流逝。',
+    '湖':'表面平静。',
+    '池塘':'小范围情感。',
+    '井':'深处探索。',
+    '瀑布':'情感猛烈释放。',
+    '水':'情感状态。',
+    '波浪':'情绪波动。',
+    '潮汐':'周期性变化。',
+    '漩涡':'被卷入。',
+    '深渊':'深层恐惧。',
+    
+    // 交通工具类 - 20个
+    '车':'你的社会身份和掌控力。',
+    '开车':'你对生活的掌控程度。',
+    '坐车':'你处于被动位置。',
+    '自行车':'你需要自己用力才能前进。',
+    '摩托车':'速度和失控感。',
+    '火车':'人生的旅程。',
+    '地铁':'被社会系统裹挟。',
+    '公交车':'随大流前进。',
+    '出租车':'依赖外部帮助。',
+    '飞机':'远大的目标。',
+    '船':'你在情感的深水中航行。',
+    '电梯':'你的人生轨迹。',
+    '直升机':'快速升降。',
+    '宇宙飞船':'超越现实。',
+    '火箭':'急速上升。',
+    'UFO':'未知与超自然。',
+    '坦克':'防御与攻击。',
+    '马车':'传统与缓慢。',
+    '滑板':'年轻与冒险。',
+    '轮椅':'失去独立性。',
+    
+    // 身体部位类 - 20个
+    '头':'理性与思考。',
+    '脸':'公众形象。',
+    '眼睛':'看世界的方式。',
+    '耳朵':'不想听到的信息。',
+    '嘴巴':'表达的欲望。',
+    '牙齿':'力量与焦虑。',
+    '舌头':'言语与味觉。',
+    '脖子':'连接与脆弱。',
+    '肩膀':'负担与责任。',
+    '手':'掌控与创造。',
+    '手指':'精细操作。',
+    '拳头':'攻击与决心。',
+    '心脏':'情感核心。',
+    '胃':'消化与直觉。',
+    '肚子':'本能与满足。',
+    '背部':'支撑与负担。',
+    '腿':'前进与支持。',
+    '膝盖':'屈服与支撑。',
+    '脚':'根基与方向。',
+    '皮肤':'边界与保护。',
+    
+    // 情绪感受类 - 20个
+    '开心':'你的潜意识在确认——有些东西是对的。',
+    '焦虑':'你对未来的不确定感。',
+    '害怕':'你对某个具体事物的恐惧。',
+    '恐惧':'你正在压抑的深层焦虑。',
+    '绝望':'你觉得看不到出路。',
+    '孤独':'你与他人的情感连接断裂了。',
+    '寂寞':'你对陪伴的深层需求。',
+    '愤怒':'你的边界被侵犯了。',
+    '生气':'同上，更日常的状态。',
+    '伤心':'你正在经历某种失去。',
+    '难过':'你内心的柔软部分被触碰了。',
+    '痛苦':'你在经历深刻的折磨。',
+    '压力':'你正在承担超过能力的负荷。',
+    '疲惫':'你的身心资源已经消耗殆尽。',
+    '嫉妒':'你想要别人拥有的东西。',
+    '羡慕':'你对某种生活状态的向往。',
+    '委屈':'你觉得自己受了不公平的对待。',
+    '感动':'你内心柔软的部分被触动了。',
+    '希望':'你对未来的期待。',
+    '期待':'你在等待美好的事情发生。',
+    
+    // 动作行为类 - 20个
+    '飞':'你渴望自由。',
+    '跑':'你心里有个"来不及了"的声音。',
+    '追':'你对某个东西的执着。',
+    '逃':'你在回避某个人或某件事。',
+    '躲':'你不想被发现。',
+    '跳':'你正站在跳跃点上。',
+    '掉':'失控感。',
+    '坠落':'失控和信任危机。',
+    '爬':'你在艰难地向上走。',
+    '走':'你正在进行的旅程。',
+    '站':'你停下来了。',
+    '坐':'你处于被动状态。',
+    '躺':'你想要休息。',
+    '游泳':'你在情感的深水中探索。',
+    '溺水':'你被情感压倒了。',
+    '驾驶':'你对生活方向的掌控。',
+    '骑车':'你需要自己用力。',
+    '开门':'你准备好接受新的机会。',
+    '关门':'你想结束什么。',
+    '打破':'你想要打破限制。',
+    
+    // 物品符号类 - 20个
+    '手机':'你与外界连接的纽带。',
+    '电脑':'你的大脑处理信息的方式。',
+    '镜子':'你在审视自己。',
+    '钥匙':'你有解决问题的能力。',
+    '锁':'有东西阻碍着你。',
+    '门':'机会和障碍。',
+    '窗':'你对外部世界的窥视。',
+    '床':'亲密关系和脆弱。',
+    '衣服':'你的公众形象。',
+    '鞋子':'你的人生方向。',
+    '帽子':'你的社会角色。',
+    '包':'你背负的东西。',
+    '钱包':'你的经济安全感。',
+    '书':'知识和学习。',
+    '信':'未表达的情感。',
+    '照片':'你对过去的执念。',
+    '画':'你的创造力。',
+    '花':'美好与短暂。',
+    '树':'成长与扎根。',
+    '灯':'指引和希望。'
+  };
+  
+  // 匹配关键词
+  var matched=[];
+  for(var key in keywords){
+    if(text.indexOf(key)!==-1) matched.push({key:key,meaning:keywords[key]});
+  }
+  
+  // 构建详细解读 - 300-400字
+  var analysis='';
+  
+  if(matched.length===0){
+    analysis+='这个梦是你潜意识在和你对话。虽然梦里没有出现常见的象征元素，但每一个画面、每一种感受，都是你内心真实的投射。\n\n';
+    analysis+='你的梦在告诉你一些重要的事情。建议你回想一下：梦里最让你在意的是哪个细节？那个细节往往就是答案所在。';
+    return analysis;
+  }
+  
+  var count=matched.length;
+  
+  // 开场 - 说明梦的整体性质
+  if(count>=5){
+    analysis+='这个梦很丰富，包含了很多元素。这说明你内心正在同时处理多件事情，可能有些事情积压在一起，让你感到有点喘不过气。\n\n';
+    analysis+='梦里出现的每一个元素都不是偶然的，它们共同指向你内心深处正在经历的议题。让我来帮你把这些碎片拼起来，看看你的潜意识想说什么。\n\n';
+  }else if(count>=3){
+    analysis+='这个梦有几个重要的元素，它们之间存在某种内在联系。你的潜意识在用一种隐晦的方式告诉你一些事情——直接说出来你可能会抗拒，但通过梦的象征，你反而能更容易接受。\n\n';
+  }else{
+    analysis+='这个梦的核心很明确，就那么一两个元素，但它在你心里有很重的分量。潜意识选中它来和你对话，一定是有原因的。\n\n';
+  }
+  
+  // 深入解读每个主题
+  var themes=[];
+  var details=[];
+  
+  // 检测各种主题
+  var hasEmotion=matched.some(function(m){return ['开心','焦虑','害怕','恐惧','愤怒','伤心','孤独','绝望','压力','难过','委屈'].indexOf(m.key)!==-1;});
+  var hasRelationship=matched.some(function(m){return ['母亲','父亲','家','前任','情人','老公','老婆','男朋友','女朋友','朋友','敌人','陌生人','小孩','婴儿'].indexOf(m.key)!==-1;});
+  var hasFreedom=matched.some(function(m){return ['飞','跑','追','逃','躲','被困','监狱','迷路','找不到'].indexOf(m.key)!==-1;});
+  var hasChange=matched.some(function(m){return ['死','重生','变老','变小','变大','坠落','掉','脱落'].indexOf(m.key)!==-1;});
+  var hasWater=matched.some(function(m){return ['水','海','河','湖','雨','游泳','溺水','波浪'].indexOf(m.key)!==-1;});
+  var hasAnimal=matched.some(function(m){return ['蛇','鸟','鱼','猫','狗','龙','蝴蝶','蜘蛛','老虎','狮子','狼'].indexOf(m.key)!==-1;});
+  var hasPlace=matched.some(function(m){return ['家','房间','学校','公司','医院','教堂','墓地','海边','森林','沙漠'].indexOf(m.key)!==-1;});
+  var hasModern=matched.some(function(m){return ['手机','电脑','车','飞机','电梯','电视'].indexOf(m.key)!==-1;});
+  
+  // 情感主题
+  if(hasEmotion){
+    var emotions=matched.filter(function(m){return ['开心','焦虑','害怕','恐惧','愤怒','伤心','孤独','绝望','压力','难过','委屈'].indexOf(m.key)!==-1;});
+    var e=emotions[0];
+    if(['焦虑','害怕','恐惧','压力'].indexOf(e.key)!==-1){
+      analysis+='你现在的情绪状态是'+e.key+'。这种感觉不是凭空产生的，它一定对应着现实中的某件事。可能是工作上的压力，可能是人际关系的紧张，也可能是不确定感带来的焦虑。\n\n';
+      analysis+='梦里出现'+e.key+'的情绪，说明这件事已经影响到你的内心了，不只是表面上的担心，而是深层的不安。建议你找时间正视这个问题，而不是一直逃避或者假装没事。\n\n';
+    }else if(['伤心','难过','孤独','绝望','委屈'].indexOf(e.key)!==-1){
+      analysis+='你内心有'+e.key+'的感觉。这种感受往往是长期积累的，可能是一件具体的事，也可能是很多小事叠加在一起的结果。\n\n';
+      analysis+='梦里的这个情绪是真实的，不要否认它。承认自己的感受是治愈的第一步。你不需要马上好起来，但需要给自己一点时间和空间去消化这些情绪。\n\n';
+    }else if(['开心','快乐'].indexOf(e.key)!==-1){
+      analysis+='这个梦里有积极正面的情绪。这是好兆头，说明你内心有满足感和安全感。可能是某段关系让你感到幸福，或者某个目标即将达成。好好珍惜这种感觉。\n\n';
+    }else if(['愤怒','生气'].indexOf(e.key)!==-1){
+      analysis+='愤怒是你最真实的感受之一。你的边界被侵犯了，或者有人/某件事触碰了你的底线。这种愤怒如果一直压抑着，迟早会爆发。\n\n';
+      analysis+='建议找一个合适的方式表达出来，不需要攻击谁，但需要让对方知道你的感受是被尊重的。\n\n';
+    }
+  }
+  
+  // 关系主题
+  if(hasRelationship){
+    var rels=matched.filter(function(m){return ['母亲','父亲','家','前任','情人','老公','老婆','男朋友','女朋友','朋友','敌人','陌生人','小孩','婴儿'].indexOf(m.key)!==-1;});
+    var r=rels[0];
+    if(['母亲','父亲','家'].indexOf(r.key)!==-1){
+      analysis+='家和亲人是你梦里的核心意象。这说明安全感是你现在的核心议题。你可能在某方面感到不安全，需要被照顾、被接纳。\n\n';
+      analysis+='如果梦里是母亲出现，往往和情感需求有关；如果是父亲，可能和权威、规则、责任有关。家是你内心最私密的空间，它的模样反映了你内心是否平静。\n\n';
+    }else if(['前任','情人'].indexOf(r.key)!==-1){
+      analysis+='亲密关系的议题在你心里很重要。'+r.key+'出现在梦里，说明那段关系里还有没处理完的情感。它可能在提醒你：你还没有真正放下，或者那段关系里的某些模式正在现在的生活中重演。\n\n';
+      analysis+='问问自己：现在有没有类似的感觉？那种熟悉的感觉是从哪里来的？\n\n';
+    }else if(['小孩','婴儿'].indexOf(r.key)!==-1){
+      analysis+='孩子是新生和纯真的象征。它可能代表你内心正在孕育的某个新想法、新计划，或者你渴望回到更简单、更纯真的状态。\n\n';
+      analysis+='也可能是你的"内在小孩"需要被看见——那个曾经受伤的、没有被好好对待的部分自己。\n\n';
+    }else if(['陌生人'].indexOf(r.key)!==-1){
+      analysis+='陌生人往往代表你不认识的那部分自己。那些你不愿承认、不敢面对的特质，往往会以陌生人的形象出现在梦里。\n\n';
+      analysis+='这个梦在提醒你：不要只活在自己熟悉的角色里，你还有更多的可能性。\n\n';
+    }else{
+      var relMeaning=r.meaning.replace(/^[你]/,'').replace(/[。！？\.!?,，、]$/,'');
+      analysis+='这个梦里出现了'+r.key+'，'+relMeaning+'。这段关系在你心里的分量，可能比表面上看起来要重得多。\n\n';
+    }
+  }
+  
+  // 自由主题
+  if(hasFreedom){
+    var f=matched.find(function(m){return ['飞','跑','追','逃','躲','被困','监狱','迷路','找不到'].indexOf(m.key)!==-1;});
+    if(['飞'].indexOf(f.key)!==-1){
+      analysis+='飞翔是最强烈的自由象征。你渴望摆脱现在的束缚，活出一个更广阔的自己。这种渴望是真实的，不是"想太多"。\n\n';
+      analysis+='梦里飞得怎么样？是轻松自在还是艰难？这是关键——轻松说明你内心有力量；艰难可能意味着某种阻碍。\n\n';
+    }else if(['追','逃'].indexOf(f.key)!==-1){
+      analysis+='追和逃是最常见的焦虑梦。你在追什么？又在逃什么？很多时候，它们是同一件事——你既想要得到某样东西，又害怕失去它。\n\n';
+      analysis+='这种矛盾消耗了你很多能量。梦在提醒你：是时候想清楚了，到底什么才是真正重要的。\n\n';
+    }else if(['被困','监狱','迷路','找不到'].indexOf(f.key)!==-1){
+      analysis+='被困住、迷路、找不到——这是失控的感觉。你可能在某个方面感到无能为力，不知道该往哪里走。\n\n';
+      analysis+='好消息是：梦里出现这些，说明潜意识正在帮你面对这个问题。答案其实在你心里，只是暂时被遮住了。\n\n';
+    }
+  }
+  
+  // 水的主题
+  if(hasWater && !hasEmotion){
+    var w=matched.find(function(m){return ['水','海','河','湖','雨','游泳','溺水'].indexOf(m.key)!==-1;});
+    var wMeaning=w.meaning.replace(/^[你]/,'').replace(/[。！？\.!?,，、]$/,'');
+    analysis+='水代表情感，'+wMeaning+'。你现在的情感状态可能像水一样——要么在涌动，要么在积蓄，要么在寻找出口。\n\n';
+    if(['海','河'].indexOf(w.key)!==-1){
+      analysis+='大水往往是深层的情感，可能涉及到你最深层的恐惧或渴望。\n\n';
+    }else if(['雨'].indexOf(w.key)!==-1){
+      analysis+='雨是情感的释放。可能有些积压的情绪正在通过某种方式得到缓解。\n\n';
+    }
+  }
+  
+  // 动物主题
+  if(hasAnimal && !hasEmotion && !hasRelationship){
+    var a=matched.find(function(m){return ['蛇','鸟','鱼','猫','狗','龙','蝴蝶','蜘蛛','老虎','狮子','狼'].indexOf(m.key)!==-1;});
+    var aMeaning=a.meaning.replace(/^[你]/,'').replace(/[。！？\.!?,，、]$/,'');
+    analysis+='动物在梦里是本能的象征，'+aMeaning+'。这种本能层面的信息往往是潜意识最想告诉你的。\n\n';
+    if(['蛇','龙'].indexOf(a.key)!==-1){
+      analysis+='蛇和龙都是非常原始的意象，代表你内心深处巨大的力量或恐惧。它们出现，往往意味着你正站在某个转折点上。\n\n';
+    }else if(['蝴蝶'].indexOf(a.key)!==-1){
+      analysis+='蝴蝶是蜕变的象征。你正在经历内在的变化，像毛毛虫变蝴蝶一样，正在成为新的自己。\n\n';
+    }
+  }
+  
+  // 地点主题
+  if(hasPlace && !hasRelationship){
+    var p=matched.find(function(m){return ['家','房间','学校','公司','医院','教堂','墓地','海边','森林','沙漠'].indexOf(m.key)!==-1;});
+    var pMeaning=p.meaning.replace(/^[你]/,'').replace(/[。！？\.!?,，、]$/,'');
+    analysis+=pMeaning+'\n\n';
+    if(['学校'].indexOf(p.key)!==-1){
+      analysis+='学校往往是"被考核"的焦虑。可能是工作中的压力，或者害怕被评判。\n\n';
+    }else if(['医院'].indexOf(p.key)!==-1){
+      analysis+='医院代表脆弱和需要照顾。你可能真的需要休息了。\n\n';
+    }else if(['墓地'].indexOf(p.key)!==-1){
+      analysis+='墓地是对死亡和失去的思考，或者对过去某段经历的告别。\n\n';
+    }
+  }
+  
+  // 变化主题
+  if(hasChange){
+    var c=matched.find(function(m){return ['死','重生','变老','变小','变大'].indexOf(m.key)!==-1;});
+    var cMeaning=c.meaning.replace(/^[你]/,'').replace(/[。！？\.!?,，、]$/,'');
+    if(['死','重生'].indexOf(c.key)!==-1){
+      analysis+=cMeaning+'。死亡在梦里从来不代表真正的死亡。它代表结束和开始。某个旧的模式、某段关系、某种身份，正在结束，为新的东西腾出空间。\n\n';
+      analysis+='这是好事。蜕变总是痛苦的，但它是重生的必经之路。\n\n';
+    }else if(['变老','变小','变大'].indexOf(c.key)!==-1){
+      analysis+=cMeaning+'\n\n';
+    }
+  }
+  
+  // 现代物品
+  if(hasModern && !hasEmotion && !hasFreedom){
+    var m=matched.find(function(m){return ['手机','电脑','车','飞机','电梯','电视'].indexOf(m.key)!==-1;});
+    var mMeaning=m.meaning.replace(/^[你]/,'').replace(/[。！？\.!?,，、]$/,'');
+    analysis+=mMeaning+'\n\n';
+  }
+  
+  // 总结
+  if(count>=3){
+    var sumMeaning=matched[0].meaning.replace(/^[你]/,'').replace(/[。！？\.!?,，、]$/,'');
+    analysis+='【总结】\n';
+    analysis+='你的梦包含'+count+'个关键元素，它们共同在说一件事：'+sumMeaning+'。\n\n';
+    analysis+='这不是随机出现的，而是你潜意识在用最隐晦但最真实的方式告诉你：你正在经历这件事。';
+  }
+  
+  return analysis;
+}
+
+// 分享功能
+function shareDream(){
+  document.getElementById('shareModal').classList.add('active');
+}
+
+function closeShare(){
+  document.getElementById('shareModal').classList.remove('active');
+}
+
+function copyDream(){
+  var text='【我的梦】\n'+curDream+'\n\n用画梦AI生成的梦境解读和画作，很有意思~';
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(text).then(function(){
+      alert('已复制到剪贴板');
+    });
+  }else{
+    alert('请手动复制：'+text);
+  }
+}
+
+// 真人解梦弹窗
+function showHumanModal(){
+  document.getElementById('humanModal').classList.add('active');
+}
+
+function closeHumanModal(){
+  document.getElementById('humanModal').classList.remove('active');
+}
+
+initStyles();
+</script>
+</body>
+</html>
