@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>测一测你的灵魂长什么样</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);min-height:100vh;font-family:'PingFang SC','Microsoft YaHei',sans-serif;color:#fff}
+.container{max-width:600px;margin:0 auto;padding:20px}
+h1{text-align:center;font-size:28px;font-weight:600;margin-bottom:10px;background:linear-gradient(90deg,#f39c12,#e74c3c);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.subtitle{text-align:center;color:#aaa;font-size:14px;margin-bottom:30px}
+.quiz-section{background:rgba(255,255,255,0.05);border-radius:20px;padding:25px;margin-bottom:20px;border:1px solid rgba(255,255,255,0.1)}
+.question{font-size:18px;margin-bottom:20px;line-height:1.6}
+.options{display:flex;flex-direction:column;gap:12px}
+.option{background:rgba(255,255,255,0.08);border:2px solid transparent;border-radius:12px;padding:15px;cursor:pointer;transition:all .3s}
+.option:hover{background:rgba(255,255,255,0.15);border-color:#f39c12}
+.option.selected{background:rgba(243,156,18,0.2);border-color:#f39c12}
+.btn{display:block;width:100%;padding:15px;background:linear-gradient(90deg,#f39c12,#e74c3c);border:none;border-radius:12px;color:#fff;font-size:16px;font-weight:600;cursor:pointer;transition:all .3s;margin-top:20px}
+.btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(243,156,18,.3)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.result-section{display:none;background:rgba(255,255,255,0.08);border-radius:20px;padding:30px;text-align:center;border:1px solid rgba(255,255,255,0.15)}
+.result-title{font-size:24px;margin-bottom:15px;background:linear-gradient(90deg,#f39c12,#e74c3c);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.result-desc{font-size:16px;line-height:1.8;color:#ddd;margin-bottom:20px}
+.soul-image{width:150px;height:150px;margin:20px auto;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:60px;box-shadow:0 20px 60px rgba(102,126,234,.4)}
+.soul-traits{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:20px 0}
+.trait{background:rgba(255,255,255,0.1);padding:8px 16px;border-radius:20px;font-size:14px}
+.ai-section{background:rgba(255,255,255,0.05);border-radius:20px;padding:25px;margin-top:20px;border:1px solid rgba(255,255,255,0.1)}
+.ai-title{font-size:18px;margin-bottom:15px;color:#f39c12;display:flex;align-items:center;gap:10px}
+.ai-title::before{content:"🤖";font-size:24px}
+.ai-chat{height:200px;overflow-y:auto;background:rgba(0,0,0,0.3);border-radius:12px;padding:15px;margin-bottom:15px}
+.ai-message{margin-bottom:10px;padding:10px 15px;border-radius:12px;max-width:80%}
+.ai-message.user{background:#f39c12;margin-left:auto;text-align:right}
+.ai-message.assistant{background:rgba(255,255,255,0.1);margin-right:auto}
+.ai-input{display:flex;gap:10px}
+.ai-input input{flex:1;padding:12px;border:2px solid rgba(255,255,255,0.1);border-radius:10px;background:rgba(255,255,255,0.05);color:#fff;font-size:14px}
+.ai-input input::placeholder{color:#888}
+.ai-input button{padding:12px 20px;background:#f39c12;border:none;border-radius:10px;color:#fff;font-size:14px;cursor:pointer}
+.progress-bar{height:4px;background:rgba(255,255,255,0.1);border-radius:2px;margin-bottom:20px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#f39c12,#e74c3c);transition:width .3s}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>✨ 测一测你的灵魂长什么样</h1>
+<p class="subtitle">10道灵魂测试题，揭示你内在的真实模样</p>
+
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+<div class="quiz-section" id="quiz">
+<div class="question" id="question"></div>
+<div class="options" id="options"></div>
+<button class="btn" id="nextBtn" onclick="nextQuestion()" disabled>下一题</button>
+</div>
+
+<div class="result-section" id="result">
+<div class="soul-image" id="soulImage">✨</div>
+<h2 class="result-title" id="resultTitle"></h2>
+<p class="result-desc" id="resultDesc"></p>
+<div class="soul-traits" id="soulTraits"></div>
+<button class="btn" onclick="restartQuiz()">重新测试</button>
+
+<div class="ai-section">
+<div class="ai-title">AI灵魂解读师</div>
+<div class="ai-chat" id="aiChat">
+<div class="ai-message assistant">你好！我是你的AI灵魂解读师。你的测试结果很有趣，想深入了解你的灵魂特质吗？可以问我任何问题，比如：<br>• 我的灵魂颜色代表什么？<br>• 这种灵魂类型适合什么职业？<br>• 如何发挥我的灵魂优势？</div>
+</div>
+<div class="ai-input">
+<input type="text" id="aiInput" placeholder="输入你的问题..." onkeypress="if(event.key==='Enter')sendAI()">
+<button onclick="sendAI()">发送</button>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+const questions=[
+{q:"当你独处时，你通常会：",options:["思考人生意义","沉浸在自己的幻想世界","规划未来的目标","享受当下的宁静"],scores:[3,2,0,1]},
+{q:"你最喜欢的颜色是：",options:["深邃的蓝色或紫色","温暖的橙色或红色","纯净的白色或银色","神秘的黑色或金色"],scores:[2,3,0,1]},
+{q:"面对困难时，你的第一反应是：",options:["冷静分析问题","凭直觉行动","寻求他人帮助","独自承受并解决"],scores:[0,2,1,3]},
+{q:"你理想中的生活方式是：",options:["自由自在，无拘无束","充满激情与挑战","平静安稳，岁月静好","不断探索未知领域"],scores:[2,3,1,0]},
+{q:"你认为人生最宝贵的是：",options:["智慧与真理","爱与情感","成功与成就","内心的平静"],scores:[0,2,3,1]},
+{q:"在人群中，你通常是：",options:["安静的观察者","活跃的领导者","温暖的陪伴者","独特的存在"],scores:[0,3,1,2]},
+{q:"你的梦境通常是：",options:["清晰而有意义","奇幻而绚丽","紧张而刺激","平静而美好"],scores:[0,2,3,1]},
+{q:"你最向往的地方是：",options:["高山之巅","大海深处","森林秘境","星空宇宙"],scores:[3,1,0,2]},
+{q:"你认为自己最大的优点是：",options:["坚韧不拔","富有创意","善解人意","独立自主"],scores:[3,2,1,0]},
+{q:"如果灵魂有形状，你希望它是：",options:["燃烧的火焰","流动的水波","坚固的岩石","自由的风"],scores:[3,1,0,2]}
+];
+
+const soulTypes=[
+{type:"炽焰之魂",emoji:"🔥",desc:"你的灵魂如烈火般炽热，充满激情与力量。你有着强烈的意志力和不屈的精神，能够点燃周围人的热情。你的存在本身就是一种鼓舞，但要注意不要让火焰灼伤自己和他人。",traits:["热情","坚定","领导力","创造力"]},
+{type:"流水之魂",emoji:"💧",desc:"你的灵魂如流水般柔韧，善于适应变化。你有着敏锐的直觉和深刻的情感，能够感知他人的需求。你的温柔是一种力量，但记得也要为自己设立边界。",traits:["敏感","包容","直觉","治愈"]},
+{type:"大地之魂",emoji:"🌍",desc:"你的灵魂如大地般厚重，给人安全感。你脚踏实地，值得信赖，是朋友们坚实的后盾。你的稳重是一种美德，但也要学会偶尔放飞自我。",traits:["可靠","务实","耐心","忠诚"]},
+{type:"清风之魂",emoji:"🌬️",desc:"你的灵魂如清风般自由，不受拘束。你思维活跃，充满创意，总能带来新鲜的视角。你的自由精神令人羡慕，但也要学会在某些时刻安定下来。",traits:["自由","创新","灵活","乐观"]},
+{type:"星光之魂",emoji:"⭐",desc:"你的灵魂如星光般神秘而璀璨。你有着超越常人的洞察力和智慧，常常能看到事物的本质。你的独特让你与众不同，但也要记得与人间保持连接。",traits:["智慧","神秘","洞察","灵性"]},
+{type:"月光之魂",emoji:"🌙",desc:"你的灵魂如月光般温柔而深邃。你内心世界丰富，有着艺术家般的气质。你的宁静能够安抚他人，但也要学会在必要时展现自己的力量。",traits:["温柔","艺术","内省","和谐"]}
+];
+
+let currentQ=0;
+let totalScore=0;
+let selectedOption=-1;
+
+function loadQuestion(){
+const q=questions[currentQ];
+document.getElementById('question').textContent=(currentQ+1)+'. '+q.q;
+const optsDiv=document.getElementById('options');
+optsDiv.innerHTML='';
+q.options.forEach((opt,idx)=>{
+const div=document.createElement('div');
+div.className='option';
+div.textContent=opt;
+div.onclick=()=>selectOption(idx);
+optsDiv.appendChild(div);
+});
+document.getElementById('nextBtn').disabled=true;
+selectedOption=-1;
+document.getElementById('progress').style.width=((currentQ/questions.length)*100)+'%';
+}
+
+function selectOption(idx){
+document.querySelectorAll('.option').forEach((el,i)=>{
+el.classList.toggle('selected',i===idx);
+});
+selectedOption=idx;
+document.getElementById('nextBtn').disabled=false;
+}
+
+function nextQuestion(){
+if(selectedOption===-1)return;
+totalScore+=questions[currentQ].scores[selectedOption];
+currentQ++;
+if(currentQ<questions.length){
+loadQuestion();
+}else{
+showResult();
+}
+}
+
+function showResult(){
+document.getElementById('quiz').style.display='none';
+document.getElementById('result').style.display='block';
+document.getElementById('progress').style.width='100%';
+
+const soulIndex=Math.floor(totalScore/5)%soulTypes.length;
+const soul=soulTypes[soulIndex];
+
+document.getElementById('soulImage').textContent=soul.emoji;
+document.getElementById('resultTitle').textContent='你的灵魂是：'+soul.type;
+document.getElementById('resultDesc').textContent=soul.desc;
+
+const traitsDiv=document.getElementById('soulTraits');
+traitsDiv.innerHTML='';
+soul.traits.forEach(trait=>{
+const span=document.createElement('span');
+span.className='trait';
+span.textContent='#'+trait;
+traitsDiv.appendChild(span);
+});
+
+window.currentSoulType=soul;
+}
+
+function restartQuiz(){
+currentQ=0;
+totalScore=0;
+selectedOption=-1;
+document.getElementById('quiz').style.display='block';
+document.getElementById('result').style.display='none';
+document.getElementById('aiChat').innerHTML='<div class="ai-message assistant">你好！我是你的AI灵魂解读师。你的测试结果很有趣，想深入了解你的灵魂特质吗？可以问我任何问题，比如：<br>• 我的灵魂颜色代表什么？<br>• 这种灵魂类型适合什么职业？<br>• 如何发挥我的灵魂优势？</div>';
+loadQuestion();
+}
+
+function sendAI(){
+const input=document.getElementById('aiInput');
+const msg=input.value.trim();
+if(!msg)return;
+
+const chat=document.getElementById('aiChat');
+const userDiv=document.createElement('div');
+userDiv.className='ai-message user';
+userDiv.textContent=msg;
+chat.appendChild(userDiv);
+input.value='';
+chat.scrollTop=chat.scrollHeight;
+
+setTimeout(()=>{
+const soul=window.currentSoulType||soulTypes[0];
+const responses={
+'颜色':`你的${soul.type}代表着独特的能量频率。${soul.emoji}这个符号象征着你内在的${soul.traits.join('、')}特质。`,
+'职业':`作为${soul.type}，你适合从事需要${soul.traits[0]}和${soul.traits[1]}的工作，比如创意、咨询、教育或领导岗位。`,
+'优势':`发挥你的${soul.traits[0]}特质，同时培养${soul.traits[2]}能力，会让你的人生更加圆满。`,
+'爱情':`在感情中，你的${soul.traits[1]}特质是优势，但要注意保持自我边界，不要为了迎合他人而失去本真。`,
+'建议':`记住：${soul.desc.split('。')[1]}。保持真我，同时学会与不同灵魂类型的人和谐相处。`
+};
+
+let reply='';
+for(let key in responses){
+if(msg.includes(key)){
+reply=responses[key];
+break;
+}
+}
+if(!reply){
+reply=`作为${soul.type}，你的问题是：${msg}。从灵魂特质来看，你的${soul.traits.join('、')}会帮助你找到答案。记住，真正的力量来自内心。`;
+}
+
+const aiDiv=document.createElement('div');
+aiDiv.className='ai-message assistant';
+aiDiv.textContent=reply;
+chat.appendChild(aiDiv);
+chat.scrollTop=chat.scrollHeight;
+},800);
+}
+
+loadQuestion();
+</script>
+</body>
+</html>
