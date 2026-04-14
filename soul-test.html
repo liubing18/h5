@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>娴嬩竴娴嬩綘鐨勭伒榄傞暱浠€涔堟牱</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);min-height:100vh;font-family:'PingFang SC','Microsoft YaHei',sans-serif;color:#fff}
+.container{max-width:600px;margin:0 auto;padding:20px}
+h1{text-align:center;font-size:28px;font-weight:600;margin-bottom:10px;background:linear-gradient(90deg,#f39c12,#e74c3c);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.subtitle{text-align:center;color:#aaa;font-size:14px;margin-bottom:30px}
+.quiz-section{background:rgba(255,255,255,0.05);border-radius:20px;padding:25px;margin-bottom:20px;border:1px solid rgba(255,255,255,0.1)}
+.question{font-size:18px;margin-bottom:20px;line-height:1.6}
+.options{display:flex;flex-direction:column;gap:12px}
+.option{background:rgba(255,255,255,0.08);border:2px solid transparent;border-radius:12px;padding:15px;cursor:pointer;transition:all .3s}
+.option:hover{background:rgba(255,255,255,0.15);border-color:#f39c12}
+.option.selected{background:rgba(243,156,18,0.2);border-color:#f39c12}
+.btn{display:block;width:100%;padding:15px;background:linear-gradient(90deg,#f39c12,#e74c3c);border:none;border-radius:12px;color:#fff;font-size:16px;font-weight:600;cursor:pointer;transition:all .3s;margin-top:20px}
+.btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(243,156,18,.3)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.result-section{display:none;background:rgba(255,255,255,0.08);border-radius:20px;padding:30px;text-align:center;border:1px solid rgba(255,255,255,0.15)}
+.result-title{font-size:24px;margin-bottom:15px;background:linear-gradient(90deg,#f39c12,#e74c3c);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.result-desc{font-size:16px;line-height:1.8;color:#ddd;margin-bottom:20px}
+.soul-image{width:150px;height:150px;margin:20px auto;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:60px;box-shadow:0 20px 60px rgba(102,126,234,.4)}
+.soul-traits{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:20px 0}
+.trait{background:rgba(255,255,255,0.1);padding:8px 16px;border-radius:20px;font-size:14px}
+.ai-section{background:rgba(255,255,255,0.05);border-radius:20px;padding:25px;margin-top:20px;border:1px solid rgba(255,255,255,0.1)}
+.ai-title{font-size:18px;margin-bottom:15px;color:#f39c12;display:flex;align-items:center;gap:10px}
+.ai-title::before{content:"馃";font-size:24px}
+.ai-chat{height:200px;overflow-y:auto;background:rgba(0,0,0,0.3);border-radius:12px;padding:15px;margin-bottom:15px}
+.ai-message{margin-bottom:10px;padding:10px 15px;border-radius:12px;max-width:80%}
+.ai-message.user{background:#f39c12;margin-left:auto;text-align:right}
+.ai-message.assistant{background:rgba(255,255,255,0.1);margin-right:auto}
+.ai-input{display:flex;gap:10px}
+.ai-input input{flex:1;padding:12px;border:2px solid rgba(255,255,255,0.1);border-radius:10px;background:rgba(255,255,255,0.05);color:#fff;font-size:14px}
+.ai-input input::placeholder{color:#888}
+.ai-input button{padding:12px 20px;background:#f39c12;border:none;border-radius:10px;color:#fff;font-size:14px;cursor:pointer}
+.progress-bar{height:4px;background:rgba(255,255,255,0.1);border-radius:2px;margin-bottom:20px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#f39c12,#e74c3c);transition:width .3s}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>鉁?娴嬩竴娴嬩綘鐨勭伒榄傞暱浠€涔堟牱</h1>
+<p class="subtitle">10閬撶伒榄傛祴璇曢锛屾彮绀轰綘鍐呭湪鐨勭湡瀹炴ā鏍?/p>
+
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+<div class="quiz-section" id="quiz">
+<div class="question" id="question"></div>
+<div class="options" id="options"></div>
+<button class="btn" id="nextBtn" onclick="nextQuestion()" disabled>涓嬩竴棰?/button>
+</div>
+
+<div class="result-section" id="result">
+<div class="soul-image" id="soulImage">鉁?/div>
+<h2 class="result-title" id="resultTitle"></h2>
+<p class="result-desc" id="resultDesc"></p>
+<div class="soul-traits" id="soulTraits"></div>
+<button class="btn" onclick="restartQuiz()">閲嶆柊娴嬭瘯</button>
+
+<div class="ai-section">
+<div class="ai-title">AI鐏甸瓊瑙ｈ甯?/div>
+<div class="ai-chat" id="aiChat">
+<div class="ai-message assistant">浣犲ソ锛佹垜鏄綘鐨凙I鐏甸瓊瑙ｈ甯堛€備綘鐨勬祴璇曠粨鏋滃緢鏈夎叮锛屾兂娣卞叆浜嗚В浣犵殑鐏甸瓊鐗硅川鍚楋紵鍙互闂垜浠讳綍闂锛屾瘮濡傦細<br>鈥?鎴戠殑鐏甸瓊棰滆壊浠ｈ〃浠€涔堬紵<br>鈥?杩欑鐏甸瓊绫诲瀷閫傚悎浠€涔堣亴涓氾紵<br>鈥?濡備綍鍙戞尌鎴戠殑鐏甸瓊浼樺娍锛?/div>
+</div>
+<div class="ai-input">
+<input type="text" id="aiInput" placeholder="杈撳叆浣犵殑闂..." onkeypress="if(event.key==='Enter')sendAI()">
+<button onclick="sendAI()">鍙戦€?/button>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+const questions=[
+{q:"褰撲綘鐙鏃讹紝浣犻€氬父浼氾細",options:["鎬濊€冧汉鐢熸剰涔?,"娌夋蹈鍦ㄨ嚜宸辩殑骞绘兂涓栫晫","瑙勫垝鏈潵鐨勭洰鏍?,"浜彈褰撲笅鐨勫畞闈?],scores:[3,2,0,1]},
+{q:"浣犳渶鍠滄鐨勯鑹叉槸锛?,options:["娣遍們鐨勮摑鑹叉垨绱壊","娓╂殩鐨勬鑹叉垨绾㈣壊","绾噣鐨勭櫧鑹叉垨閾惰壊","绁炵鐨勯粦鑹叉垨閲戣壊"],scores:[2,3,0,1]},
+{q:"闈㈠鍥伴毦鏃讹紝浣犵殑绗竴鍙嶅簲鏄細",options:["鍐烽潤鍒嗘瀽闂","鍑洿瑙夎鍔?,"瀵绘眰浠栦汉甯姪","鐙嚜鎵垮彈骞惰В鍐?],scores:[0,2,1,3]},
+{q:"浣犵悊鎯充腑鐨勭敓娲绘柟寮忔槸锛?,options:["鑷敱鑷湪锛屾棤鎷樻棤鏉?,"鍏呮弧婵€鎯呬笌鎸戞垬","骞抽潤瀹夌ǔ锛屽瞾鏈堥潤濂?,"涓嶆柇鎺㈢储鏈煡棰嗗煙"],scores:[2,3,1,0]},
+{q:"浣犺涓轰汉鐢熸渶瀹濊吹鐨勬槸锛?,options:["鏅烘収涓庣湡鐞?,"鐖变笌鎯呮劅","鎴愬姛涓庢垚灏?,"鍐呭績鐨勫钩闈?],scores:[0,2,3,1]},
+{q:"鍦ㄤ汉缇や腑锛屼綘閫氬父鏄細",options:["瀹夐潤鐨勮瀵熻€?,"娲昏穬鐨勯瀵艰€?,"娓╂殩鐨勯櫔浼磋€?,"鐙壒鐨勫瓨鍦?],scores:[0,3,1,2]},
+{q:"浣犵殑姊﹀閫氬父鏄細",options:["娓呮櫚鑰屾湁鎰忎箟","濂囧够鑰岀粴涓?,"绱у紶鑰屽埡婵€","骞抽潤鑰岀編濂?],scores:[0,2,3,1]},
+{q:"浣犳渶鍚戝線鐨勫湴鏂规槸锛?,options:["楂樺北涔嬪穮","澶ф捣娣卞","妫灄绉樺","鏄熺┖瀹囧畽"],scores:[3,1,0,2]},
+{q:"浣犺涓鸿嚜宸辨渶澶х殑浼樼偣鏄細",options:["鍧氶煣涓嶆嫈","瀵屾湁鍒涙剰","鍠勮В浜烘剰","鐙珛鑷富"],scores:[3,2,1,0]},
+{q:"濡傛灉鐏甸瓊鏈夊舰鐘讹紝浣犲笇鏈涘畠鏄細",options:["鐕冪儳鐨勭伀鐒?,"娴佸姩鐨勬按娉?,"鍧氬浐鐨勫博鐭?,"鑷敱鐨勯"],scores:[3,1,0,2]}
+];
+
+const soulTypes=[
+{type:"鐐界劙涔嬮瓊",emoji:"馃敟",desc:"浣犵殑鐏甸瓊濡傜儓鐏埇鐐界儹锛屽厖婊℃縺鎯呬笌鍔涢噺銆備綘鏈夌潃寮虹儓鐨勬剰蹇楀姏鍜屼笉灞堢殑绮剧锛岃兘澶熺偣鐕冨懆鍥翠汉鐨勭儹鎯呫€備綘鐨勫瓨鍦ㄦ湰韬氨鏄竴绉嶉紦鑸烇紝浣嗚娉ㄦ剰涓嶈璁╃伀鐒扮伡浼よ嚜宸卞拰浠栦汉銆?,traits:["鐑儏","鍧氬畾","棰嗗鍔?,"鍒涢€犲姏"]},
+{type:"娴佹按涔嬮瓊",emoji:"馃挧",desc:"浣犵殑鐏甸瓊濡傛祦姘磋埇鏌旈煣锛屽杽浜庨€傚簲鍙樺寲銆備綘鏈夌潃鏁忛攼鐨勭洿瑙夊拰娣卞埢鐨勬儏鎰燂紝鑳藉鎰熺煡浠栦汉鐨勯渶姹傘€備綘鐨勬俯鏌旀槸涓€绉嶅姏閲忥紝浣嗚寰椾篃瑕佷负鑷繁璁剧珛杈圭晫銆?,traits:["鏁忔劅","鍖呭","鐩磋","娌绘剤"]},
+{type:"澶у湴涔嬮瓊",emoji:"馃實",desc:"浣犵殑鐏甸瓊濡傚ぇ鍦拌埇鍘氶噸锛岀粰浜哄畨鍏ㄦ劅銆備綘鑴氳笍瀹炲湴锛屽€煎緱淇¤禆锛屾槸鏈嬪弸浠潥瀹炵殑鍚庣浘銆備綘鐨勭ǔ閲嶆槸涓€绉嶇編寰凤紝浣嗕篃瑕佸浼氬伓灏旀斁椋炶嚜鎴戙€?,traits:["鍙潬","鍔″疄","鑰愬績","蹇犺瘹"]},
+{type:"娓呴涔嬮瓊",emoji:"馃尙锔?,desc:"浣犵殑鐏甸瓊濡傛竻椋庤埇鑷敱锛屼笉鍙楁嫎鏉熴€備綘鎬濈淮娲昏穬锛屽厖婊″垱鎰忥紝鎬昏兘甯︽潵鏂伴矞鐨勮瑙掋€備綘鐨勮嚜鐢辩簿绁炰护浜虹尽鎱曪紝浣嗕篃瑕佸浼氬湪鏌愪簺鏃跺埢瀹夊畾涓嬫潵銆?,traits:["鑷敱","鍒涙柊","鐏垫椿","涔愯"]},
+{type:"鏄熷厜涔嬮瓊",emoji:"猸?,desc:"浣犵殑鐏甸瓊濡傛槦鍏夎埇绁炵鑰岀拃鐠ㄣ€備綘鏈夌潃瓒呰秺甯镐汉鐨勬礊瀵熷姏鍜屾櫤鎱э紝甯稿父鑳界湅鍒颁簨鐗╃殑鏈川銆備綘鐨勭嫭鐗硅浣犱笌浼椾笉鍚岋紝浣嗕篃瑕佽寰椾笌浜洪棿淇濇寔杩炴帴銆?,traits:["鏅烘収","绁炵","娲炲療","鐏垫€?]},
+{type:"鏈堝厜涔嬮瓊",emoji:"馃寵",desc:"浣犵殑鐏甸瓊濡傛湀鍏夎埇娓╂煍鑰屾繁閭冦€備綘鍐呭績涓栫晫涓板瘜锛屾湁鐫€鑹烘湳瀹惰埇鐨勬皵璐ㄣ€備綘鐨勫畞闈欒兘澶熷畨鎶氫粬浜猴紝浣嗕篃瑕佸浼氬湪蹇呰鏃跺睍鐜拌嚜宸辩殑鍔涢噺銆?,traits:["娓╂煍","鑹烘湳","鍐呯渷","鍜岃皭"]}
+];
+
+let currentQ=0;
+let totalScore=0;
+let selectedOption=-1;
+
+function loadQuestion(){
+const q=questions[currentQ];
+document.getElementById('question').textContent=(currentQ+1)+'. '+q.q;
+const optsDiv=document.getElementById('options');
+optsDiv.innerHTML='';
+q.options.forEach((opt,idx)=>{
+const div=document.createElement('div');
+div.className='option';
+div.textContent=opt;
+div.onclick=()=>selectOption(idx);
+optsDiv.appendChild(div);
+});
+document.getElementById('nextBtn').disabled=true;
+selectedOption=-1;
+document.getElementById('progress').style.width=((currentQ/questions.length)*100)+'%';
+}
+
+function selectOption(idx){
+document.querySelectorAll('.option').forEach((el,i)=>{
+el.classList.toggle('selected',i===idx);
+});
+selectedOption=idx;
+document.getElementById('nextBtn').disabled=false;
+}
+
+function nextQuestion(){
+if(selectedOption===-1)return;
+totalScore+=questions[currentQ].scores[selectedOption];
+currentQ++;
+if(currentQ<questions.length){
+loadQuestion();
+}else{
+showResult();
+}
+}
+
+function showResult(){
+document.getElementById('quiz').style.display='none';
+document.getElementById('result').style.display='block';
+document.getElementById('progress').style.width='100%';
+
+const soulIndex=Math.floor(totalScore/5)%soulTypes.length;
+const soul=soulTypes[soulIndex];
+
+document.getElementById('soulImage').textContent=soul.emoji;
+document.getElementById('resultTitle').textContent='浣犵殑鐏甸瓊鏄細'+soul.type;
+document.getElementById('resultDesc').textContent=soul.desc;
+
+const traitsDiv=document.getElementById('soulTraits');
+traitsDiv.innerHTML='';
+soul.traits.forEach(trait=>{
+const span=document.createElement('span');
+span.className='trait';
+span.textContent='#'+trait;
+traitsDiv.appendChild(span);
+});
+
+window.currentSoulType=soul;
+}
+
+function restartQuiz(){
+currentQ=0;
+totalScore=0;
+selectedOption=-1;
+document.getElementById('quiz').style.display='block';
+document.getElementById('result').style.display='none';
+document.getElementById('aiChat').innerHTML='<div class="ai-message assistant">浣犲ソ锛佹垜鏄綘鐨凙I鐏甸瓊瑙ｈ甯堛€備綘鐨勬祴璇曠粨鏋滃緢鏈夎叮锛屾兂娣卞叆浜嗚В浣犵殑鐏甸瓊鐗硅川鍚楋紵鍙互闂垜浠讳綍闂锛屾瘮濡傦細<br>鈥?鎴戠殑鐏甸瓊棰滆壊浠ｈ〃浠€涔堬紵<br>鈥?杩欑鐏甸瓊绫诲瀷閫傚悎浠€涔堣亴涓氾紵<br>鈥?濡備綍鍙戞尌鎴戠殑鐏甸瓊浼樺娍锛?/div>';
+loadQuestion();
+}
+
+function sendAI(){
+const input=document.getElementById('aiInput');
+const msg=input.value.trim();
+if(!msg)return;
+
+const chat=document.getElementById('aiChat');
+const userDiv=document.createElement('div');
+userDiv.className='ai-message user';
+userDiv.textContent=msg;
+chat.appendChild(userDiv);
+input.value='';
+chat.scrollTop=chat.scrollHeight;
+
+setTimeout(()=>{
+const soul=window.currentSoulType||soulTypes[0];
+const responses={
+'棰滆壊':`浣犵殑${soul.type}浠ｈ〃鐫€鐙壒鐨勮兘閲忛鐜囥€?{soul.emoji}杩欎釜绗﹀彿璞″緛鐫€浣犲唴鍦ㄧ殑${soul.traits.join('銆?)}鐗硅川銆俙,
+'鑱屼笟':`浣滀负${soul.type}锛屼綘閫傚悎浠庝簨闇€瑕?{soul.traits[0]}鍜?{soul.traits[1]}鐨勫伐浣滐紝姣斿鍒涙剰銆佸挩璇€佹暀鑲叉垨棰嗗宀椾綅銆俙,
+'浼樺娍':`鍙戞尌浣犵殑${soul.traits[0]}鐗硅川锛屽悓鏃跺煿鍏?{soul.traits[2]}鑳藉姏锛屼細璁╀綘鐨勪汉鐢熸洿鍔犲渾婊°€俙,
+'鐖辨儏':`鍦ㄦ劅鎯呬腑锛屼綘鐨?{soul.traits[1]}鐗硅川鏄紭鍔匡紝浣嗚娉ㄦ剰淇濇寔鑷垜杈圭晫锛屼笉瑕佷负浜嗚繋鍚堜粬浜鸿€屽け鍘绘湰鐪熴€俙,
+'寤鸿':`璁颁綇锛?{soul.desc.split('銆?)[1]}銆備繚鎸佺湡鎴戯紝鍚屾椂瀛︿細涓庝笉鍚岀伒榄傜被鍨嬬殑浜哄拰璋愮浉澶勩€俙
+};
+
+let reply='';
+for(let key in responses){
+if(msg.includes(key)){
+reply=responses[key];
+break;
+}
+}
+if(!reply){
+reply=`浣滀负${soul.type}锛屼綘鐨勯棶棰樻槸锛?{msg}銆備粠鐏甸瓊鐗硅川鏉ョ湅锛屼綘鐨?{soul.traits.join('銆?)}浼氬府鍔╀綘鎵惧埌绛旀銆傝浣忥紝鐪熸鐨勫姏閲忔潵鑷唴蹇冦€俙;
+}
+
+const aiDiv=document.createElement('div');
+aiDiv.className='ai-message assistant';
+aiDiv.textContent=reply;
+chat.appendChild(aiDiv);
+chat.scrollTop=chat.scrollHeight;
+},800);
+}
+
+loadQuestion();
+</script>
+</body>
+</html>
